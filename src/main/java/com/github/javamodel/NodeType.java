@@ -2,22 +2,20 @@ package com.github.javamodel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
 * Created by federico on 21/05/15.
 */
 @Data
 class NodeType {
-    private static List<Class> transparentTypes = ImmutableList.of(
+    private static Set<Class> transparentTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
             Java8Parser.ClassDeclarationContext.class,
             Java8Parser.ClassBodyDeclarationContext.class,
@@ -25,16 +23,20 @@ class NodeType {
             Java8Parser.UnannTypeContext.class,
             Java8Parser.UnannPrimitiveTypeContext.class,
             Java8Parser.NumericTypeContext.class,
-            Java8Parser.FieldModifierContext.class);
+            Java8Parser.FieldModifierContext.class,
+            Java8Parser.VariableDeclaratorListContext.class);
+
+    private static Set<Class> classesWithValues = ImmutableSet.of(Java8Parser.IntegralTypeContext.class);
 
     private static Map<Method, String> aliases = ImmutableMap.of(
             method(Java8Parser.FieldDeclarationContext.class, "unannType"), "type",
-            method(Java8Parser.ClassBodyContext.class, "classBodyDeclaration"), "classElements"
+            method(Java8Parser.ClassBodyContext.class, "classBodyDeclaration"), "classElements",
+            method(Java8Parser.VariableDeclaratorContext.class, "variableDeclaratorId"), "id"
     );
 
     private static Method method(Class c, String methodName){
         try {
-            return c.getDeclaredMethod(methodName);
+            return c.getMethod(methodName);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -105,6 +107,9 @@ class NodeType {
                     throw new RuntimeException("unexpected method " + method);
                 }
             }
+        }
+        if (classesWithValues.contains(ruleContextClass)){
+            nodeType.getAttributes().add(new Attribute(false, "value", (v) -> v.getStart().getText()));
         }
         return nodeType;
     }
