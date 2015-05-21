@@ -10,6 +10,10 @@ This project is not even in alpha state. The intended usages are:
 * tool to perform refactoring
 * remove unused imports
 
+# License
+
+Apache License V2
+
 # Design
 
-We are going to use ANTLR4.
+The parser is based on the Java 8 grammar for ANTLR4 developed by Terence Parr and Sam Harwell
