@@ -18,6 +18,7 @@ class NodeType {
     private static Set<Class> transparentTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
             Java8Parser.ClassDeclarationContext.class,
+            Java8Parser.ClassBodyContext.class,
             Java8Parser.ClassBodyDeclarationContext.class,
             Java8Parser.ClassMemberDeclarationContext.class,
             Java8Parser.UnannTypeContext.class,
@@ -30,7 +31,7 @@ class NodeType {
 
     private static Map<Method, String> aliases = ImmutableMap.of(
             method(Java8Parser.FieldDeclarationContext.class, "unannType"), "type",
-            method(Java8Parser.ClassBodyContext.class, "classBodyDeclaration"), "classElements",
+            method(Java8Parser.NormalClassDeclarationContext.class, "classBody"), "classElements",
             method(Java8Parser.VariableDeclaratorContext.class, "variableDeclaratorId"), "id"
     );
 
