@@ -1,5 +1,6 @@
 package com.github.javamodel;
 
+import com.google.common.collect.ImmutableList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.antlr.v4.runtime.*;
@@ -20,12 +21,15 @@ import java.util.Set;
 
 public class ParserCli
 {
+    private static List<Class> transparentTypes = ImmutableList.of(Java8Parser.TypeDeclarationContext.class, Java8Parser.ClassDeclarationContext.class);
+
     @Data
     @AllArgsConstructor
     static class Relation {
         private Class<?> type;
         private boolean multiple;
         private String name;
+        private Method method;
     }
 
     @Data
@@ -39,34 +43,30 @@ public class ParserCli
     }
     
     static <C extends ParserRuleContext> NodeType getNodeType(Class<C> ruleContextClass) throws NoSuchMethodException {
-        NodeType nodeType = new NodeType(ruleContextClass.getSimpleName());
-        System.out.println("class "+ruleContextClass);
-        Set<String> listTypes = new HashSet<>();
+        if (!ruleContextClass.getSimpleName().endsWith("Context")){
+            throw new RuntimeException("Unexpected name: "+ruleContextClass.getSimpleName());
+        }
+        NodeType nodeType = new NodeType(ruleContextClass.getSimpleName().substring(0, ruleContextClass.getSimpleName().length() - 7));
         for (Method method : ruleContextClass.getDeclaredMethods()) {
             Class<?> returnType = method.getReturnType();
             if (method.getName().equals("getRuleIndex")) {
             } else if (method.getParameterCount() != 0) {
             } else if ("void".equals(returnType.getTypeName())) {
             } else if (List.class.isAssignableFrom(returnType)) {
-                System.out.println("* " + method);
                 // It return a list, but we cannot retrieve the type of the element. We need to find a method with the
                 // same name but getting a parameter:
                 // ex.
                 // 		List<ImportDeclarationContext> importDeclaration()
                 //      ImportDeclarationContext importDeclaration(int i)
-                listTypes.add(method.getName());
                 Method singleElementMethod = ruleContextClass.getDeclaredMethod(method.getName(), int.class);
-                System.out.println("  list of " + singleElementMethod.getReturnType().getSimpleName());
-                nodeType.getRelations().add(new Relation(singleElementMethod.getReturnType(), true, method.getName()));
+                nodeType.getRelations().add(new Relation(singleElementMethod.getReturnType(), true, method.getName(), method));
             } else {
-                System.out.println("* "+method);
                 if (returnType.getCanonicalName().equals(TerminalNode.class.getCanonicalName())) {
-                    System.out.println("  SINGLE TERMINAL");
-                    nodeType.getRelations().add(new Relation(returnType, false, method.getName()));
+                    nodeType.getRelations().add(new Relation(returnType, false, method.getName(), method));
                 } else if (ParserRuleContext.class.isAssignableFrom(returnType)){
-                    nodeType.getRelations().add(new Relation(returnType, false, method.getName()));
+                    nodeType.getRelations().add(new Relation(returnType, false, method.getName(), method));
                 } else {
-                    System.out.println("  ??? SINGLE " +returnType.getTypeName());
+                    throw new RuntimeException("unexpected method " + method);
                 }
             }
         }
@@ -75,20 +75,37 @@ public class ParserCli
     
     static void printTree(ParserRuleContext ctx, int indentation) throws NoSuchMethodException {
         NodeType nodeType = getNodeType(ctx.getClass());
-        
-        for (int j=0; j<indentation; j++) System.out.print("  ");
-        System.out.println("[" + ctx.getClass().getSimpleName() + "]");
-        for (int i=0; i<ctx.getChildCount(); i++){
-            ParseTree child = ctx.getChild(i);
-            if (child instanceof ParserRuleContext) {
-                printTree((ParserRuleContext) ctx.getChild(i), indentation + 1);
-            } else if (child instanceof TerminalNodeImpl) {
-                for (int j=0; j<indentation+1; j++) System.out.print("  ");
-                TerminalNodeImpl terminalNode = (TerminalNodeImpl)child;
-                System.out.println(terminalNode.getText());
-            } else {
-                for (int j=0; j<indentation+1; j++) System.out.print("  ");
-                System.out.println("? " +ctx.getChild(i).getClass());
+        boolean isTransparent = transparentTypes.contains(ctx.getClass());
+
+        if (isTransparent) {
+            for (int i = 0; i < ctx.getChildCount(); i++) {
+                ParseTree child = ctx.getChild(i);
+                if (child instanceof ParserRuleContext) {
+                    printTree((ParserRuleContext) ctx.getChild(i), indentation);
+                } else if (child instanceof TerminalNodeImpl) {
+                    for (int j = 0; j < indentation; j++) System.out.print("  ");
+                    TerminalNodeImpl terminalNode = (TerminalNodeImpl) child;
+                    System.out.println(terminalNode.getText());
+                } else {
+                    for (int j = 0; j < indentation; j++) System.out.print("  ");
+                    System.out.println("? " + ctx.getChild(i).getClass());
+                }
+            }
+        } else {
+            for (int j = 0; j < indentation; j++) System.out.print("  ");
+            System.out.println("[" + nodeType.getName() + "]");
+            for (int i = 0; i < ctx.getChildCount(); i++) {
+                ParseTree child = ctx.getChild(i);
+                if (child instanceof ParserRuleContext) {
+                    printTree((ParserRuleContext) ctx.getChild(i), indentation + 1);
+                } else if (child instanceof TerminalNodeImpl) {
+                    for (int j = 0; j < indentation + 1; j++) System.out.print("  ");
+                    TerminalNodeImpl terminalNode = (TerminalNodeImpl) child;
+                    System.out.println(terminalNode.getText());
+                } else {
+                    for (int j = 0; j < indentation + 1; j++) System.out.print("  ");
+                    System.out.println("? " + ctx.getChild(i).getClass());
+                }
             }
         }
     }
