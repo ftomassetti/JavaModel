@@ -28,6 +28,10 @@ public class Node {
         return children;
     }
 
+    public List<Node> getChildren(Relation relation){
+        return relation.getChildren(wrapped);
+    }
+
     public NodeType getNodeType(){
         return NodeType.get(wrapped.getClass());
     }

@@ -1,6 +1,7 @@
 package com.github.javamodel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -26,6 +27,19 @@ class NodeType {
             Java8Parser.NumericTypeContext.class,
             Java8Parser.FieldModifierContext.class);
 
+    private static Map<Method, String> aliases = ImmutableMap.of(
+            method(Java8Parser.FieldDeclarationContext.class, "unannType"), "type",
+            method(Java8Parser.ClassBodyContext.class, "classBodyDeclaration"), "classElements"
+    );
+
+    private static Method method(Class c, String methodName){
+        try {
+            return c.getDeclaredMethod(methodName);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private List<Relation> relations = new LinkedList<>();
     private List<Attribute> attributes = new LinkedList<>();
     private String name;
@@ -47,6 +61,14 @@ class NodeType {
         return nodeTypes.get(parserRuleContextClass);
     }
 
+    private static String toPropertyName(Method method){
+        if (aliases.containsKey(method)){
+            return aliases.get(method);
+        } else {
+            return method.getName();
+        }
+    }
+
     private static <C extends ParserRuleContext> NodeType deriveNodeType(Class<C> ruleContextClass) throws NoSuchMethodException {
         if (!ruleContextClass.getSimpleName().endsWith("Context")){
             throw new RuntimeException("Unexpected name: "+ruleContextClass.getSimpleName());
@@ -66,19 +88,19 @@ class NodeType {
                 //      ImportDeclarationContext importDeclaration(int i)
                 Method singleElementMethod = ruleContextClass.getDeclaredMethod(method.getName(), int.class);
                 if (singleElementMethod.getReturnType().getCanonicalName().equals(TerminalNode.class.getCanonicalName())) {
-                    nodeType.getAttributes().add(new Attribute(true, method.getName(), method));
+                    nodeType.getAttributes().add(new Attribute(true, toPropertyName(method), method));
                 } else if (ParserRuleContext.class.isAssignableFrom(singleElementMethod.getReturnType())){
-                    nodeType.getRelations().add(new Relation(singleElementMethod.getReturnType(), true, method.getName(), method));
+                    nodeType.getRelations().add(new Relation(singleElementMethod.getReturnType(), true, toPropertyName(method), method));
                 } else {
                     throw new RuntimeException("unexpected method " + method);
                 }
             } else {
                 if (returnType.getCanonicalName().equals(TerminalNode.class.getCanonicalName())) {
                     if (!method.getName().equals("EOF")) {
-                        nodeType.getAttributes().add(new Attribute(false, method.getName(), method));
+                        nodeType.getAttributes().add(new Attribute(false, toPropertyName(method), method));
                     }
                 } else if (ParserRuleContext.class.isAssignableFrom(returnType)){
-                    nodeType.getRelations().add(new Relation(returnType, false, method.getName(), method));
+                    nodeType.getRelations().add(new Relation(returnType, false, toPropertyName(method), method));
                 } else {
                     throw new RuntimeException("unexpected method " + method);
                 }
