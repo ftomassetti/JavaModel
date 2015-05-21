@@ -1,5 +1,7 @@
 package com.github.javamodel;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -9,39 +11,69 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class ParserCli
 {
+    @Data
+    @AllArgsConstructor
+    static class Relation {
+        private Class<?> type;
+        private boolean multiple;
+        private String name;
+    }
+
+    @Data
     static class NodeType {
-        
+        private List<Relation> relations = new LinkedList<>();
+        private String name;
+
+        public NodeType(String name){
+            this.name = name;
+        }
     }
     
-    static <C extends ParserRuleContext> NodeType getNodeType(Class<C> ruleContextClass) {
-        NodeType nodeType = new NodeType();
+    static <C extends ParserRuleContext> NodeType getNodeType(Class<C> ruleContextClass) throws NoSuchMethodException {
+        NodeType nodeType = new NodeType(ruleContextClass.getSimpleName());
         System.out.println("class "+ruleContextClass);
-        for (Method method : ruleContextClass.getDeclaredMethods()){
+        Set<String> listTypes = new HashSet<>();
+        for (Method method : ruleContextClass.getDeclaredMethods()) {
             Class<?> returnType = method.getReturnType();
-            if ("void".equals(returnType.getTypeName())) {
-                //System.out.println("  VOID");
-            } else if (List.class.isAssignableFrom(returnType)){
-                System.out.println("* "+method);
-                System.out.println("  LIST");
+            if (method.getName().equals("getRuleIndex")) {
+            } else if (method.getParameterCount() != 0) {
+            } else if ("void".equals(returnType.getTypeName())) {
+            } else if (List.class.isAssignableFrom(returnType)) {
+                System.out.println("* " + method);
+                // It return a list, but we cannot retrieve the type of the element. We need to find a method with the
+                // same name but getting a parameter:
+                // ex.
+                // 		List<ImportDeclarationContext> importDeclaration()
+                //      ImportDeclarationContext importDeclaration(int i)
+                listTypes.add(method.getName());
+                Method singleElementMethod = ruleContextClass.getDeclaredMethod(method.getName(), int.class);
+                System.out.println("  list of " + singleElementMethod.getReturnType().getSimpleName());
+                nodeType.getRelations().add(new Relation(singleElementMethod.getReturnType(), true, method.getName()));
             } else {
                 System.out.println("* "+method);
-                if (returnType.getCanonicalName().equals(TerminalNode.class.getCanonicalName())){
+                if (returnType.getCanonicalName().equals(TerminalNode.class.getCanonicalName())) {
                     System.out.println("  SINGLE TERMINAL");
-                    
+                    nodeType.getRelations().add(new Relation(returnType, false, method.getName()));
+                } else if (ParserRuleContext.class.isAssignableFrom(returnType)){
+                    nodeType.getRelations().add(new Relation(returnType, false, method.getName()));
                 } else {
-                    System.out.println("  NOT LIST " +returnType.getTypeName());
+                    System.out.println("  ??? SINGLE " +returnType.getTypeName());
                 }
             }
         }
         return nodeType;
     }
     
-    static void printTree(ParserRuleContext ctx, int indentation){
+    static void printTree(ParserRuleContext ctx, int indentation) throws NoSuchMethodException {
         NodeType nodeType = getNodeType(ctx.getClass());
         
         for (int j=0; j<indentation; j++) System.out.print("  ");
@@ -62,7 +94,7 @@ public class ParserCli
     }
     
     
-    public static void main( String[] args ) throws IOException {
+    public static void main( String[] args ) throws IOException, NoSuchMethodException {
         String code = "class A {}";
         InputStream is = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
         Java8Lexer lexer = new Java8Lexer(new ANTLRInputStream(is));
