@@ -1,5 +1,6 @@
 package com.github.javamodel.ast;
 
+import com.github.javamodel.Java8Parser;
 import com.github.javamodel.RelationMapping;
 import com.github.javamodel.RuleMapping;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
@@ -12,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
 * Created by federico on 21/05/15.
@@ -24,13 +26,28 @@ public class NodeType<N extends Node> {
     private String name;
     private Class<N> nodeClass;
 
+    private static Set<Class> transparentTypes = ImmutableSet.of(
+            Java8Parser.TypeDeclarationContext.class,
+            Java8Parser.ClassDeclarationContext.class,
+            Java8Parser.ClassBodyContext.class,
+            Java8Parser.ClassBodyDeclarationContext.class,
+            Java8Parser.ClassMemberDeclarationContext.class,
+            Java8Parser.UnannTypeContext.class,
+            Java8Parser.UnannPrimitiveTypeContext.class,
+            Java8Parser.NumericTypeContext.class,
+            Java8Parser.FieldModifierContext.class,
+            Java8Parser.VariableDeclaratorListContext.class,
+            Java8Parser.ClassModifierContext.class);
+
     private NodeType(String name, Class<N> nodeClass){
         this.name = name;
         this.nodeClass = nodeClass;
     }
     
     // This force the classes to be loaded
-    private static Set<Object> nodeClasses = ImmutableSet.of(TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE);
+    private static Set<Object> nodeClasses = ImmutableSet.of(
+            TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
+            AnnotationUsageNode.NODE_TYPE, Modifier.NODE_TYPE);
     
     private static Map<Class, Class> ruleClassesToNodeClasses;
     private static Map<Class, NodeType> ruleClassesToNodeTypes;
@@ -69,7 +86,47 @@ public class NodeType<N extends Node> {
         System.out.println("  known relations are  " + ruleClassesToNodeClasses);
         NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         System.out.println("  node type found is " + nodeType);
+        if (nodeType == null){
+            throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
+        }
         return nodeType;
+    }
+
+    private Object getTransparent(Object value){
+        if (transparentTypes.contains(value.getClass())){
+            Object node = null;
+            for (Method method : value.getClass().getDeclaredMethods()){
+                if (method.getParameterCount() == 0){
+                    if (ParserRuleContext.class.isAssignableFrom(method.getReturnType())){
+                        try {
+                            Object result = method.invoke(value);
+                            if (result != null){
+                                if (node != null){
+                                    throw new RuntimeException();
+                                } else {
+                                    node = result;
+                                }
+                            }
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else if (List.class.isAssignableFrom(method.getReturnType())) {
+                        throw new RuntimeException("Transparent types should not return list");
+                    }
+                }
+            }
+            if (node == null){
+                ParserRuleContext ctx = (ParserRuleContext)value;
+                if (ctx.getStart() != null) {
+                    return ctx.getStart();
+                } else {
+                    throw new RuntimeException("No alternative found for the transparent type " + value.getClass());
+                }
+            }
+            return getTransparent(node);
+        } else {
+            return value;
+        }
     }
     
     public N fromAntlrNode(ParserRuleContext ruleContext, Node parentNode){
@@ -80,8 +137,11 @@ public class NodeType<N extends Node> {
             } else {
                 node = nodeClass.getConstructor(Node.class).newInstance(parentNode);
             }
+            System.out.println("\n=== AntlrNode "+ruleContext.getClass().getSimpleName()+" ===\n");
             for (Field field : nodeClass.getDeclaredFields()){
                 if (field.isAnnotationPresent(RelationMapping.class)){
+                    RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
+                    if (relationMappings.length != 1) throw new RuntimeException();
                     System.out.println("Considering field " + field.getName());
                     String ctxAccessorName = ctxAccessorName(field);
                     try {
@@ -92,11 +152,13 @@ public class NodeType<N extends Node> {
                             System.out.println("  multiple relation");
                             if (value != null) {
                                 List valueAsList = (List) value;
-                                for (Object valueElement : valueAsList){
+                                for (Object valueElement : filter(valueAsList, relationMappings[0])){
                                     // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
                                     System.out.println("  value element "+valueElement.getClass());
+                                    valueElement = getTransparent(valueElement);
                                     NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
                                     Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext)valueElement, node);
+                                    System.out.println("  converted to "+correspondingElementValue);
                                 }
                             }
                         } else {
@@ -115,6 +177,24 @@ public class NodeType<N extends Node> {
             return node;
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e){
             throw new RuntimeException(e);
+        }
+    }
+
+    private Iterable<? extends Object> filter(List<Object> valueAsList, RelationMapping relationMapping) {
+        if (relationMapping.filter().isEmpty()){
+            return valueAsList;
+        } else {
+            boolean negated = relationMapping.filter().startsWith("!");
+            final String methodName = negated ? relationMapping.filter().substring(1) : relationMapping.filter();
+            return valueAsList.stream().filter((value)->{
+                try {
+                    Method method = value.getClass().getDeclaredMethod(methodName);
+                    boolean isNull = null == method.invoke(value);
+                    return isNull == negated;
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e){
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
         }
     }
 
