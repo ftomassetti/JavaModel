@@ -1,7 +1,9 @@
-package com.github.javamodel.ast;
+package com.github.javamodel.ast.common;
 
 import com.github.javamodel.Java8Parser;
-import com.github.javamodel.RuleMapping;
+import com.github.javamodel.annotations.RuleMapping;
+import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.reflection.NodeType;
 import lombok.Data;
 
 /**

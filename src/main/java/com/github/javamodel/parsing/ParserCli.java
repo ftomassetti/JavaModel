@@ -1,6 +1,8 @@
-package com.github.javamodel;
+package com.github.javamodel.parsing;
 
-import com.github.javamodel.ast.CompilationUnit;
+import com.github.javamodel.Java8Lexer;
+import com.github.javamodel.Java8Parser;
+import com.github.javamodel.ast.filelevel.CompilationUnit;
 import com.github.javamodel.ast.Node;
 import org.antlr.v4.runtime.*;
 
@@ -37,7 +39,7 @@ public class ParserCli
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
-        String code = "public class A { class B {class C {} } }";
+        String code = "package a.b.c; public class A { class B {class C {} } }";
         Node root = new ParserCli().parse(code);
         //StringBuffer stringBuffer = new StringBuffer();
         //NodeTree.printTree(root, "root", 0, stringBuffer);

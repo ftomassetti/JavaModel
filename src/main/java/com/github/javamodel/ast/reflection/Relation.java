@@ -1,4 +1,4 @@
-package com.github.javamodel.ast;
+package com.github.javamodel.ast.reflection;
 
 import com.github.javamodel.*;
 import lombok.AllArgsConstructor;

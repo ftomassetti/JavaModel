@@ -1,12 +1,12 @@
 package com.github.javamodel.ast.typedecls;
 
 import com.github.javamodel.Java8Parser;
-import com.github.javamodel.RelationMapping;
-import com.github.javamodel.RuleMapping;
-import com.github.javamodel.ast.AnnotationUsageNode;
-import com.github.javamodel.ast.Modifier;
+import com.github.javamodel.annotations.RelationMapping;
+import com.github.javamodel.annotations.RuleMapping;
+import com.github.javamodel.ast.common.AnnotationUsageNode;
+import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.Node;
-import com.github.javamodel.ast.NodeType;
+import com.github.javamodel.ast.reflection.NodeType;
 import lombok.Data;
 
 import java.util.List;

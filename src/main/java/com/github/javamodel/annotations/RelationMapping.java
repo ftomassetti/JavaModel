@@ -1,4 +1,4 @@
-package com.github.javamodel;
+package com.github.javamodel.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,5 +13,7 @@ import java.lang.reflect.Method;
 @Target(ElementType.FIELD)
 public @interface RelationMapping {
     String ctxAccessorName() default "";
+    // Filter is the name of the method to invoke: if it returns null the value should not be considered
+    // the filter can be negated, if it starts with a bang (!)
     String filter() default "";
 }

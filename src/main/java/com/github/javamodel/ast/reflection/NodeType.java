@@ -1,8 +1,12 @@
-package com.github.javamodel.ast;
+package com.github.javamodel.ast.reflection;
 
 import com.github.javamodel.Java8Parser;
-import com.github.javamodel.RelationMapping;
-import com.github.javamodel.RuleMapping;
+import com.github.javamodel.annotations.RelationMapping;
+import com.github.javamodel.annotations.RuleMapping;
+import com.github.javamodel.ast.common.AnnotationUsageNode;
+import com.github.javamodel.ast.common.Modifier;
+import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
 import com.google.common.collect.ImmutableMap;
@@ -52,7 +56,7 @@ public class NodeType<N extends Node> {
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
-            AnnotationUsageNode.NODE_TYPE);
+            AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
     
     private static Map<Class, Class> ruleClassesToNodeClasses;
     private static Map<Class, NodeType> ruleClassesToNodeTypes;
@@ -62,7 +66,7 @@ public class NodeType<N extends Node> {
         NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
         RuleMapping[] ruleMappings = nodeClass.getAnnotationsByType(RuleMapping.class);
         if (1 != ruleMappings.length){
-            throw new RuntimeException();
+            throw new RuntimeException("Expected one RuleMapping on class " + nodeClass);
         }
         if (ruleClassesToNodeClasses == null) ruleClassesToNodeClasses = new HashMap<>();
         if (ruleClassesToNodeTypes == null) ruleClassesToNodeTypes = new HashMap<>();
@@ -137,6 +141,23 @@ public class NodeType<N extends Node> {
             return value;
         }
     }
+
+    private Object convertValue(Object originalValueElement, Node node){
+        Object valueElement = getTransparent(originalValueElement);
+        if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())){
+            Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
+            System.out.println("  converted to enum type " + correspondingType);
+            ParserRuleContext ctx = (ParserRuleContext)originalValueElement;
+            Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
+            System.out.println("  converted to enum value " + convertedValue);
+            return convertedValue;
+        } else {
+            NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
+            Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
+            System.out.println("  converted to " + correspondingElementValue);
+            return correspondingElementValue;
+        }
+    }
     
     public N fromAntlrNode(ParserRuleContext ruleContext, Node parentNode){
         try {
@@ -165,20 +186,7 @@ public class NodeType<N extends Node> {
                                 for (Object originalValueElement : filter(valueAsList, relationMappings[0])){
                                     // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
                                     System.out.println("  value element "+originalValueElement.getClass());
-                                    Object valueElement = getTransparent(originalValueElement);
-                                    if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())){
-                                        Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
-                                        System.out.println("  converted to enum type " + correspondingType);
-                                        ParserRuleContext ctx = (ParserRuleContext)originalValueElement;
-                                        Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-                                        System.out.println("  converted to enum value " + convertedValue);
-                                        convertedValues.add(convertedValue);
-                                    } else {
-                                        NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
-                                        Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
-                                        System.out.println("  converted to " + correspondingElementValue);
-                                        convertedValues.add(correspondingElementValue);
-                                    }
+                                    convertedValues.add(convertValue(originalValueElement, node));
                                 }
                                 field.setAccessible(true);
                                 field.set(node, convertedValues);
@@ -187,8 +195,9 @@ public class NodeType<N extends Node> {
                         } else {
                             System.out.println("  single relation");
                             if (value != null) {
+                                Object convertedValue = convertValue(value, node);
                                 field.setAccessible(true);
-                                //field.set(field, value);
+                                field.set(node, convertedValue);
                                 field.setAccessible(false);
                             }
                         }

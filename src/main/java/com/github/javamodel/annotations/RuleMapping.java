@@ -1,4 +1,4 @@
-package com.github.javamodel;
+package com.github.javamodel.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
