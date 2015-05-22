@@ -5,6 +5,7 @@ import com.github.javamodel.RelationMapping;
 import com.github.javamodel.RuleMapping;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -25,6 +26,10 @@ public class NodeType<N extends Node> {
     private List<Attribute> attributes = new LinkedList<>();
     private String name;
     private Class<N> nodeClass;
+
+    private static Map<Class, Class<? extends Enum>> ruleClassesHostingTokenToNodeTypes = ImmutableMap.of(
+            Java8Parser.ClassModifierContext.class, Modifier.class
+    );
 
     private static Set<Class> transparentTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
@@ -47,7 +52,7 @@ public class NodeType<N extends Node> {
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
-            AnnotationUsageNode.NODE_TYPE, Modifier.NODE_TYPE);
+            AnnotationUsageNode.NODE_TYPE);
     
     private static Map<Class, Class> ruleClassesToNodeClasses;
     private static Map<Class, NodeType> ruleClassesToNodeTypes;
@@ -83,7 +88,6 @@ public class NodeType<N extends Node> {
     
     private NodeType findCorrespondingNodeType(Class ruleContextClass){
         System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
-        System.out.println("  known relations are  " + ruleClassesToNodeClasses);
         NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         System.out.println("  node type found is " + nodeType);
         if (nodeType == null){
@@ -118,7 +122,12 @@ public class NodeType<N extends Node> {
             if (node == null){
                 ParserRuleContext ctx = (ParserRuleContext)value;
                 if (ctx.getStart() != null) {
-                    return ctx.getStart();
+                    Class<? extends Enum> enumClazz = ruleClassesHostingTokenToNodeTypes.get(value.getClass());
+                    if (enumClazz == null){
+                        throw new RuntimeException();
+                    }
+                    Object enumValue = Enum.valueOf(enumClazz, ctx.getStart().getText().toUpperCase());
+                    return enumValue;
                 } else {
                     throw new RuntimeException("No alternative found for the transparent type " + value.getClass());
                 }
@@ -152,14 +161,28 @@ public class NodeType<N extends Node> {
                             System.out.println("  multiple relation");
                             if (value != null) {
                                 List valueAsList = (List) value;
-                                for (Object valueElement : filter(valueAsList, relationMappings[0])){
+                                List convertedValues = new ArrayList<>();
+                                for (Object originalValueElement : filter(valueAsList, relationMappings[0])){
                                     // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
-                                    System.out.println("  value element "+valueElement.getClass());
-                                    valueElement = getTransparent(valueElement);
-                                    NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
-                                    Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext)valueElement, node);
-                                    System.out.println("  converted to "+correspondingElementValue);
+                                    System.out.println("  value element "+originalValueElement.getClass());
+                                    Object valueElement = getTransparent(originalValueElement);
+                                    if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())){
+                                        Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
+                                        System.out.println("  converted to enum type " + correspondingType);
+                                        ParserRuleContext ctx = (ParserRuleContext)originalValueElement;
+                                        Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
+                                        System.out.println("  converted to enum value " + convertedValue);
+                                        convertedValues.add(convertedValue);
+                                    } else {
+                                        NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
+                                        Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
+                                        System.out.println("  converted to " + correspondingElementValue);
+                                        convertedValues.add(correspondingElementValue);
+                                    }
                                 }
+                                field.setAccessible(true);
+                                field.set(node, convertedValues);
+                                field.setAccessible(false);
                             }
                         } else {
                             System.out.println("  single relation");
