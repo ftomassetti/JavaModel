@@ -26,15 +26,16 @@ public class ParserCli
             }
         });
         Java8Parser.CompilationUnitContext ctx = parser.compilationUnit();
-        Node root = Node.wrap(ctx);
-        return root;
+        //Node root = Node.wrap(ctx);
+        //return root;
+        return null;
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
         String code = "class A { class B {class C {} } }";
         Node root = new ParserCli().parse(code);
         StringBuffer stringBuffer = new StringBuffer();
-        NodeTree.printTree(root, "root", 0, stringBuffer);
+        //NodeTree.printTree(root, "root", 0, stringBuffer);
         System.out.println(stringBuffer.toString());
     }
 }

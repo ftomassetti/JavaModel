@@ -14,21 +14,42 @@ import java.util.*;
 * Created by federico on 21/05/15.
 */
 @Data
-class NodeType {
+public class NodeType<N extends Node> {
+    
+    private List<Relation> relations = new LinkedList<>();
+    private List<Attribute> attributes = new LinkedList<>();
+    private String name;
+    private Class<N> nodeClass;
 
-    public static NodeType deriveFromNodeClass(Class<CompilationUnit> nodeClass) {
-        NodeType nodeType = new NodeType(nodeClass.getSimpleName());
-        return nodeType;
+    private NodeType(String name, Class<N> nodeClass){
+        this.name = name;
+        this.nodeClass = nodeClass;
     }
 
-    public static class Builder {
+    public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
+        NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
+        return nodeType;
+    }
+    
+    public N fromAntlrNode(ParserRuleContext ruleContext){
+        try {
+            N node = nodeClass.newInstance();
+            return node;
+        } catch (IllegalAccessException | InstantiationException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static class Builder<N extends Node> {
         
         private String name;
         private List<Relation> relations;
         private List<Attribute> attributes;
+        private Class<N> nodeClass;
         
-        public Builder(String name){
+        public Builder(String name, Class<N> nodeClass){
             this.name = name;
+            this.nodeClass = nodeClass;
         }
         
         public Builder addRelation(Relation relation){
@@ -41,15 +62,15 @@ class NodeType {
             return this;
         }
         
-        public NodeType build(){
-            NodeType nodeType = new NodeType(name);
+        public NodeType<N> build(){
+            NodeType nodeType = new NodeType(name, nodeClass);
             nodeType.relations.addAll(relations);
             nodeType.attributes.addAll(attributes);
             return nodeType;
         }
     }
     
-    private static Set<Class> transparentTypes = ImmutableSet.of(
+    /*private static Set<Class> transparentTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
             Java8Parser.ClassDeclarationContext.class,
             Java8Parser.ClassBodyContext.class,
@@ -77,17 +98,11 @@ class NodeType {
         }
     }
 
-    private List<Relation> relations = new LinkedList<>();
-    private List<Attribute> attributes = new LinkedList<>();
-    private String name;
     private boolean transparent;
 
-    private NodeType(String name){
-        this.name = name;
-    }
-    private static Map<Class<?>, NodeType> nodeTypes = new HashMap<>();
+    private static Map<Class<?>, NodeType> nodeTypes = new HashMap<>();*/
 
-    public static <C extends ParserRuleContext> NodeType get(Class<C> parserRuleContextClass){
+    /*public static <C extends ParserRuleContext> NodeType get(Class<C> parserRuleContextClass){
         if (!nodeTypes.containsKey(parserRuleContextClass)){
             try {
                 nodeTypes.put(parserRuleContextClass, deriveNodeType(parserRuleContextClass));
@@ -104,9 +119,9 @@ class NodeType {
         } else {
             return method.getName();
         }
-    }
+    }*/
 
-    private static <C extends ParserRuleContext> NodeType deriveNodeType(Class<C> ruleContextClass) throws NoSuchMethodException {
+    /*private static <C extends ParserRuleContext> NodeType deriveNodeType(Class<C> ruleContextClass) throws NoSuchMethodException {
         if (!ruleContextClass.getSimpleName().endsWith("Context")){
             throw new RuntimeException("Unexpected name: "+ruleContextClass.getSimpleName());
         }
@@ -147,5 +162,5 @@ class NodeType {
             nodeType.getAttributes().add(new Attribute(false, "value", (v) -> v.getStart().getText()));
         }
         return nodeType;
-    }
+    }*/
 }

@@ -31,18 +31,18 @@ class Relation {
     public List<com.github.javamodel.Node> getChildren(ParserRuleContext parent) {
         List<com.github.javamodel.Node> rawChildren = getChildrenRaw(parent);
         List<com.github.javamodel.Node> children = new LinkedList<>();
-        for (com.github.javamodel.Node rawChild : rawChildren){
+        /*for (com.github.javamodel.Node rawChild : rawChildren){
             if (rawChild.getNodeType().isTransparent()){
                 children.addAll(rawChild.getAllChildren());
             } else {
                 children.add(rawChild);
             }
-        }
+        }*/
         return children;
     }
 
     private List<com.github.javamodel.Node> getChildrenRaw(ParserRuleContext parent) {
-        if (multiple){
+       /* if (multiple){
             try {
                 List<? extends ParserRuleContext> toBeWrapped = (List<? extends ParserRuleContext>) method.invoke(parent);
                 return toBeWrapped.stream().map((raw)-> com.github.javamodel.Node.wrap(raw)).collect(Collectors.toList());
@@ -64,7 +64,8 @@ class Relation {
             } catch (InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
-        }
+        }*/
+        return null;
     }
 
 }

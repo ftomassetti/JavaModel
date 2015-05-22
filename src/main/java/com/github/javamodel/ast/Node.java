@@ -15,6 +15,5 @@ public class Node {
     
     public NodeType nodeType(){
         return nodeType;
-        
     }
 }
