@@ -33,7 +33,7 @@ public class ParserCli
 
     public Node parse(String code){
         Java8Parser.CompilationUnitContext ctx = getAntlrRoot(code);
-        return CompilationUnit.NODE_TYPE.fromAntlrNode(ctx);
+        return CompilationUnit.NODE_TYPE.fromAntlrNode(ctx, null);
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {

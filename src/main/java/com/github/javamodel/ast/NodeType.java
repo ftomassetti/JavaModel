@@ -2,10 +2,12 @@ package com.github.javamodel.ast;
 
 import com.github.javamodel.RelationMapping;
 import com.github.javamodel.RuleMapping;
+import com.github.javamodel.ast.typedecls.ClassDeclaration;
+import com.github.javamodel.ast.typedecls.TypeDeclaration;
+import com.google.common.collect.ImmutableSet;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
 
-import javax.swing.text.html.parser.Parser;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,15 +29,24 @@ public class NodeType<N extends Node> {
         this.nodeClass = nodeClass;
     }
     
-    private static Map<Class, Class> ruleClassesToNodeClasses = new HashMap<>(); 
+    // This force the classes to be loaded
+    private static Set<Object> nodeClasses = ImmutableSet.of(TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE);
+    
+    private static Map<Class, Class> ruleClassesToNodeClasses;
+    private static Map<Class, NodeType> ruleClassesToNodeTypes;
 
     public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
+        //System.out.println("DERIVING "+nodeClass);
         NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
         RuleMapping[] ruleMappings = nodeClass.getAnnotationsByType(RuleMapping.class);
         if (1 != ruleMappings.length){
             throw new RuntimeException();
         }
-        ruleClassesToNodeClasses.put(nodeClass, ruleMappings[0].rule());
+        if (ruleClassesToNodeClasses == null) ruleClassesToNodeClasses = new HashMap<>();
+        if (ruleClassesToNodeTypes == null) ruleClassesToNodeTypes = new HashMap<>();
+        ruleClassesToNodeClasses.put(ruleMappings[0].rule(), nodeClass);
+        ruleClassesToNodeTypes.put(ruleMappings[0].rule(), nodeType);
+        //System.out.println("  known relations are  " + ruleClassesToNodeClasses);
         return nodeType;
     }
     
@@ -55,12 +66,20 @@ public class NodeType<N extends Node> {
     
     private NodeType findCorrespondingNodeType(Class ruleContextClass){
         System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
-        return null;
+        System.out.println("  known relations are  " + ruleClassesToNodeClasses);
+        NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
+        System.out.println("  node type found is " + nodeType);
+        return nodeType;
     }
     
-    public N fromAntlrNode(ParserRuleContext ruleContext){
+    public N fromAntlrNode(ParserRuleContext ruleContext, Node parentNode){
         try {
-            N node = nodeClass.newInstance();
+            N node = null;
+            if (parentNode == null) {
+                node = nodeClass.newInstance();
+            } else {
+                node = nodeClass.getConstructor(Node.class).newInstance(parentNode);
+            }
             for (Field field : nodeClass.getDeclaredFields()){
                 if (field.isAnnotationPresent(RelationMapping.class)){
                     System.out.println("Considering field " + field.getName());
@@ -74,8 +93,10 @@ public class NodeType<N extends Node> {
                             if (value != null) {
                                 List valueAsList = (List) value;
                                 for (Object valueElement : valueAsList){
+                                    // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
                                     System.out.println("  value element "+valueElement.getClass());
                                     NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
+                                    Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext)valueElement, node);
                                 }
                             }
                         } else {
@@ -92,7 +113,7 @@ public class NodeType<N extends Node> {
                 }
             }
             return node;
-        } catch (IllegalAccessException | InstantiationException e){
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e){
             throw new RuntimeException(e);
         }
     }
