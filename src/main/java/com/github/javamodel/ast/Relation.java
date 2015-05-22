@@ -1,5 +1,6 @@
-package com.github.javamodel;
+package com.github.javamodel.ast;
 
+import com.github.javamodel.*;
 import com.google.common.collect.ImmutableList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,10 +24,10 @@ class Relation {
     private String name;
     private Method method;
 
-    public List<Node> getChildren(ParserRuleContext parent) {
-        List<Node> rawChildren = getChildrenRaw(parent);
-        List<Node> children = new LinkedList<>();
-        for (Node rawChild : rawChildren){
+    public List<com.github.javamodel.Node> getChildren(ParserRuleContext parent) {
+        List<com.github.javamodel.Node> rawChildren = getChildrenRaw(parent);
+        List<com.github.javamodel.Node> children = new LinkedList<>();
+        for (com.github.javamodel.Node rawChild : rawChildren){
             if (rawChild.getNodeType().isTransparent()){
                 children.addAll(rawChild.getAllChildren());
             } else {
@@ -36,11 +37,11 @@ class Relation {
         return children;
     }
 
-    private List<Node> getChildrenRaw(ParserRuleContext parent) {
+    private List<com.github.javamodel.Node> getChildrenRaw(ParserRuleContext parent) {
         if (multiple){
             try {
                 List<? extends ParserRuleContext> toBeWrapped = (List<? extends ParserRuleContext>) method.invoke(parent);
-                return toBeWrapped.stream().map((raw)->Node.wrap(raw)).collect(Collectors.toList());
+                return toBeWrapped.stream().map((raw)-> com.github.javamodel.Node.wrap(raw)).collect(Collectors.toList());
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } catch (InvocationTargetException e) {
@@ -52,7 +53,7 @@ class Relation {
                 if (result == null) {
                     return ImmutableList.of();
                 } else {
-                    return ImmutableList.of(Node.wrap(result));
+                    return ImmutableList.of(com.github.javamodel.Node.wrap(result));
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);

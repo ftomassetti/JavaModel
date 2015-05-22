@@ -1,5 +1,8 @@
 package com.github.javamodel;
 
+import com.github.javamodel.ast.Attribute;
+import com.github.javamodel.ast.NodeType;
+import com.github.javamodel.ast.Relation;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.LinkedList;

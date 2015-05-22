@@ -1,5 +1,8 @@
 package com.github.javamodel;
 
+import com.github.javamodel.ast.Attribute;
+import com.github.javamodel.ast.Relation;
+
 /**
  * Created by federico on 21/05/15.
  */

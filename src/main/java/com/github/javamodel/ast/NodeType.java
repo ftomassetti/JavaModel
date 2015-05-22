@@ -1,6 +1,6 @@
-package com.github.javamodel;
+package com.github.javamodel.ast;
 
-import com.google.common.collect.ImmutableList;
+import com.github.javamodel.Java8Parser;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.Data;
