@@ -23,6 +23,10 @@ class Relation {
     private boolean multiple;
     private String name;
     private Method method;
+    
+    public static Relation single(String name, NodeType type){
+        return new Relation(null, false, name, null);
+    }
 
     public List<com.github.javamodel.Node> getChildren(ParserRuleContext parent) {
         List<com.github.javamodel.Node> rawChildren = getChildrenRaw(parent);

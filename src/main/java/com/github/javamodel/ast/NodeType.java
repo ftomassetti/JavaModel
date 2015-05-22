@@ -15,6 +15,40 @@ import java.util.*;
 */
 @Data
 class NodeType {
+
+    public static NodeType deriveFromNodeClass(Class<CompilationUnit> nodeClass) {
+        NodeType nodeType = new NodeType(nodeClass.getSimpleName());
+        return nodeType;
+    }
+
+    public static class Builder {
+        
+        private String name;
+        private List<Relation> relations;
+        private List<Attribute> attributes;
+        
+        public Builder(String name){
+            this.name = name;
+        }
+        
+        public Builder addRelation(Relation relation){
+            relations.add(relation);
+            return this;
+        }
+
+        public Builder addAttribute(Attribute attribute){
+            attributes.add(attribute);
+            return this;
+        }
+        
+        public NodeType build(){
+            NodeType nodeType = new NodeType(name);
+            nodeType.relations.addAll(relations);
+            nodeType.attributes.addAll(attributes);
+            return nodeType;
+        }
+    }
+    
     private static Set<Class> transparentTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
             Java8Parser.ClassDeclarationContext.class,

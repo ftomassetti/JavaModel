@@ -6,9 +6,11 @@ package com.github.javamodel.ast;
 public class Node {
     
     private NodeType nodeType;
+    private Node parent;
     
-    protected Node(NodeType nodeType){
+    protected Node(NodeType nodeType, Node parent){
         this.nodeType = nodeType;
+        this.parent = parent;
     }
     
     public NodeType nodeType(){
