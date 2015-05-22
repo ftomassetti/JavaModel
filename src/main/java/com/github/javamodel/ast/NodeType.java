@@ -1,12 +1,13 @@
 package com.github.javamodel.ast;
 
-import com.github.javamodel.Java8Parser;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.github.javamodel.RelationMapping;
+import com.github.javamodel.RuleMapping;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.swing.text.html.parser.Parser;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -25,15 +26,71 @@ public class NodeType<N extends Node> {
         this.name = name;
         this.nodeClass = nodeClass;
     }
+    
+    private static Map<Class, Class> ruleClassesToNodeClasses = new HashMap<>(); 
 
     public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
         NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
+        RuleMapping[] ruleMappings = nodeClass.getAnnotationsByType(RuleMapping.class);
+        if (1 != ruleMappings.length){
+            throw new RuntimeException();
+        }
+        ruleClassesToNodeClasses.put(nodeClass, ruleMappings[0].rule());
         return nodeType;
+    }
+    
+    private String ctxAccessorName(Field field){
+        RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
+        if (relationMappings.length != 1) throw new RuntimeException();
+        if (relationMappings[0].ctxAccessorName().isEmpty()) {
+            return field.getName();
+        } else {
+            return relationMappings[0].ctxAccessorName();
+        }
+    }
+    
+    private boolean isMultipleRelation(Field field){
+        return List.class.isAssignableFrom(field.getType());
+    }
+    
+    private NodeType findCorrespondingNodeType(Class ruleContextClass){
+        System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
+        return null;
     }
     
     public N fromAntlrNode(ParserRuleContext ruleContext){
         try {
             N node = nodeClass.newInstance();
+            for (Field field : nodeClass.getDeclaredFields()){
+                if (field.isAnnotationPresent(RelationMapping.class)){
+                    System.out.println("Considering field " + field.getName());
+                    String ctxAccessorName = ctxAccessorName(field);
+                    try {
+                        Method ctxAccessor = ruleContext.getClass().getDeclaredMethod(ctxAccessorName);
+                        Object value = ctxAccessor.invoke(ruleContext);
+                        System.out.println("  Value obtained is " + value);
+                        if (isMultipleRelation(field)){
+                            System.out.println("  multiple relation");
+                            if (value != null) {
+                                List valueAsList = (List) value;
+                                for (Object valueElement : valueAsList){
+                                    System.out.println("  value element "+valueElement.getClass());
+                                    NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
+                                }
+                            }
+                        } else {
+                            System.out.println("  single relation");
+                            if (value != null) {
+                                field.setAccessible(true);
+                                //field.set(field, value);
+                                field.setAccessible(false);
+                            }
+                        }
+                    } catch (NoSuchMethodException | InvocationTargetException e){
+                        throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass()+" to have method "+ctxAccessorName, e);
+                    }
+                }
+            }
             return node;
         } catch (IllegalAccessException | InstantiationException e){
             throw new RuntimeException(e);

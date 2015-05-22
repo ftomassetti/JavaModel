@@ -1,6 +1,5 @@
 package com.github.javamodel;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,8 +10,9 @@ import static org.junit.Assert.*;
 public class NodeTypeTest
 {
     private String toTreeString(String code){
-        Node root = new ParserCli().parse(code);
-        return NodeTree.treeString(root, "root", 0).trim();
+        //NodeOld root = new ParserCli().parse(code);
+        //return NodeTree.treeString(root, "root", 0).trim();
+        return null;
     }
 
     @Test

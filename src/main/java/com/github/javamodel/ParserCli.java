@@ -1,5 +1,7 @@
 package com.github.javamodel;
 
+import com.github.javamodel.ast.CompilationUnit;
+import com.github.javamodel.ast.Node;
 import org.antlr.v4.runtime.*;
 
 import java.io.ByteArrayInputStream;
@@ -9,8 +11,8 @@ import java.nio.charset.StandardCharsets;
 
 public class ParserCli
 {
-
-    public Node parse(String code){
+    
+    private Java8Parser.CompilationUnitContext getAntlrRoot(String code) {
         InputStream is = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
         Java8Lexer lexer = null;
         try {
@@ -26,16 +28,19 @@ public class ParserCli
             }
         });
         Java8Parser.CompilationUnitContext ctx = parser.compilationUnit();
-        //Node root = Node.wrap(ctx);
-        //return root;
-        return null;
+        return ctx;
+    }
+
+    public Node parse(String code){
+        Java8Parser.CompilationUnitContext ctx = getAntlrRoot(code);
+        return CompilationUnit.NODE_TYPE.fromAntlrNode(ctx);
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
         String code = "class A { class B {class C {} } }";
         Node root = new ParserCli().parse(code);
-        StringBuffer stringBuffer = new StringBuffer();
+        //StringBuffer stringBuffer = new StringBuffer();
         //NodeTree.printTree(root, "root", 0, stringBuffer);
-        System.out.println(stringBuffer.toString());
+        System.out.println(root);
     }
 }

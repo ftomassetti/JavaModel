@@ -1,17 +1,13 @@
 package com.github.javamodel.ast;
 
 import com.github.javamodel.*;
-import com.google.common.collect.ImmutableList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
 * Created by federico on 21/05/15.
@@ -28,9 +24,9 @@ class Relation {
         return new Relation(null, false, name, null);
     }
 
-    public List<com.github.javamodel.Node> getChildren(ParserRuleContext parent) {
-        List<com.github.javamodel.Node> rawChildren = getChildrenRaw(parent);
-        List<com.github.javamodel.Node> children = new LinkedList<>();
+    public List<NodeOld> getChildren(ParserRuleContext parent) {
+        List<NodeOld> rawChildren = getChildrenRaw(parent);
+        List<NodeOld> children = new LinkedList<>();
         /*for (com.github.javamodel.Node rawChild : rawChildren){
             if (rawChild.getNodeType().isTransparent()){
                 children.addAll(rawChild.getAllChildren());
@@ -41,7 +37,7 @@ class Relation {
         return children;
     }
 
-    private List<com.github.javamodel.Node> getChildrenRaw(ParserRuleContext parent) {
+    private List<NodeOld> getChildrenRaw(ParserRuleContext parent) {
        /* if (multiple){
             try {
                 List<? extends ParserRuleContext> toBeWrapped = (List<? extends ParserRuleContext>) method.invoke(parent);

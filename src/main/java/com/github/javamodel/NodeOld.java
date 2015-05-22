@@ -3,7 +3,7 @@ package com.github.javamodel;
 /**
  * Created by federico on 21/05/15.
  */
-public class Node {
+public class NodeOld {
     /*private ParserRuleContext wrapped;
 
     private Node(ParserRuleContext wrapped){
