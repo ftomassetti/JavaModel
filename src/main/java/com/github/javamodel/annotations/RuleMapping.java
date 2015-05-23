@@ -1,5 +1,7 @@
 package com.github.javamodel.annotations;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,5 +13,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RuleMapping {
-    Class rule();
+    Class<? extends ParserRuleContext> rule();
 }

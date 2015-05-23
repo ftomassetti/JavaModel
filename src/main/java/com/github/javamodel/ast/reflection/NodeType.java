@@ -18,6 +18,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -65,6 +66,46 @@ public class NodeType<N extends Node> {
     private static Map<Class, Class> ruleClassesToNodeClasses;
     private static Map<Class, NodeType> ruleClassesToNodeTypes;
 
+    private static  <A extends Annotation> A getSingleAnnotation(Field field, Class<A> annotationClass){
+        A[] annotations = field.getAnnotationsByType(annotationClass);
+        if (1 != annotations.length){
+            throw new RuntimeException("Expected one "+annotationClass.getName()+" on field " + field);
+        }
+        return annotations[0];
+    }
+
+    private static RelationMapping getRelationMapping(Field field){
+        return getSingleAnnotation(field, RelationMapping.class);
+    }
+
+    private static AttributeMapping getAttributeMapping(Field field){
+        return getSingleAnnotation(field, AttributeMapping.class);
+    }
+
+    private static Relation deriveRelation(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
+        return new Relation(getType(relationMapping, field, ctxClass), isMultipleRelation(field), field.getName(), null);
+    }
+
+    private static Attribute deriveAttribute(AttributeMapping attributeMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
+        return new Attribute(isMultipleAttribute(field), field.getName(), (Method)null);
+    }
+
+    private static Class<?> getType(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
+        if (isMultipleRelation(field)){
+            List<String> methodNames = ctxAccessorName(field);
+            for (String methodName : methodNames){
+                for (Method method : ctxClass.getDeclaredMethods()){
+                    if (method.getName().equals(methodName) && method.getParameterCount() == 1){
+                        return findCorrespondingNodeClass(method.getReturnType());
+                    }
+                }
+            }
+            throw new RuntimeException();
+        } else {
+            return field.getType();
+        }
+    }
+
     public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
         //System.out.println("DERIVING "+nodeClass);
         NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
@@ -76,11 +117,21 @@ public class NodeType<N extends Node> {
         if (ruleClassesToNodeTypes == null) ruleClassesToNodeTypes = new HashMap<>();
         ruleClassesToNodeClasses.put(ruleMappings[0].rule(), nodeClass);
         ruleClassesToNodeTypes.put(ruleMappings[0].rule(), nodeType);
-        //System.out.println("  known relations are  " + ruleClassesToNodeClasses);
+
+        for (Field field : nodeClass.getDeclaredFields()){
+            if (field.isAnnotationPresent(RelationMapping.class)){
+                RelationMapping relationMapping = getRelationMapping(field);
+                nodeType.getRelations().add(deriveRelation(relationMapping, field, ruleMappings[0].rule()));
+            } else if (field.isAnnotationPresent(AttributeMapping.class)){
+                AttributeMapping attributeMapping = getAttributeMapping(field);
+                nodeType.getAttributes().add(deriveAttribute(attributeMapping, field, ruleMappings[0].rule()));
+            }
+        }
+
         return nodeType;
     }
     
-    private List<String> ctxAccessorName(Field field, RuleContext ruleContext){
+    private static List<String> ctxAccessorName(Field field){
         RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
         AttributeMapping[] attributeMappings = field.getAnnotationsByType(AttributeMapping.class);
         String accessorName = "";
@@ -104,27 +155,27 @@ public class NodeType<N extends Node> {
         }
     }
 
-    private Method ctxAccessor(Field field, RuleContext ruleContext){
-        List<String> candidates = ctxAccessorName(field, ruleContext);
+    private Method ctxAccessor(Field field, Class<? extends RuleContext> ruleContextClass){
+        List<String> candidates = ctxAccessorName(field);
         for (String candidateName : candidates){
-            for (Method method : ruleContext.getClass().getDeclaredMethods()){
+            for (Method method : ruleContextClass.getDeclaredMethods()){
                 if (method.getName().equals(candidateName) && method.getParameterCount() == 0){
                     return method;
                 }
             }
         }
-        throw new RuntimeException("Class "+ruleContext.getClass()+" was expected to have one method in "+candidates);
+        throw new RuntimeException("Class "+ruleContextClass+" was expected to have one method in "+candidates);
     }
     
-    private boolean isMultipleRelation(Field field){
+    private static boolean isMultipleRelation(Field field){
         return List.class.isAssignableFrom(field.getType());
     }
 
-    private boolean isMultipleAttribute(Field field){
+    private static boolean isMultipleAttribute(Field field){
         return List.class.isAssignableFrom(field.getType());
     }
     
-    private NodeType findCorrespondingNodeType(Class ruleContextClass){
+    private static NodeType findCorrespondingNodeType(Class ruleContextClass){
         System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
         NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         System.out.println("  node type found is " + nodeType);
@@ -132,6 +183,16 @@ public class NodeType<N extends Node> {
             throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
         }
         return nodeType;
+    }
+
+    private static Class<?> findCorrespondingNodeClass(Class ruleContextClass){
+        System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
+        NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
+        System.out.println("  node type found is " + nodeType);
+        if (nodeType == null){
+            return ruleClassesHostingTokenToNodeTypes.get(ruleContextClass);
+        }
+        return nodeType.getNodeClass();
     }
 
     private Object getTransparent(Object value){
@@ -225,7 +286,7 @@ public class NodeType<N extends Node> {
                     if (relationMappings.length != 1) throw new RuntimeException();
                     System.out.println("Considering field " + field.getName());
                     try {
-                        Method ctxAccessor = ctxAccessor(field, ruleContext);
+                        Method ctxAccessor = ctxAccessor(field, ruleContext.getClass());
                         Object value = ctxAccessor.invoke(ruleContext);
                         System.out.println("  Value obtained is " + value);
                         if (isMultipleRelation(field)){
@@ -259,7 +320,7 @@ public class NodeType<N extends Node> {
                         if (attributeMappings.length != 1) throw new RuntimeException();
                         System.out.println("Considering field " + field.getName());
                         try {
-                            Method ctxAccessor = ctxAccessor(field, ruleContext);
+                            Method ctxAccessor = ctxAccessor(field, ruleContext.getClass());
                             Object value = ctxAccessor.invoke(ruleContext);
                             System.out.println("  Value obtained is " + value);
                             if (isMultipleAttribute(field)){
