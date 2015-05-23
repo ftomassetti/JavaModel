@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
 @Data
 public class NodeType<N extends Node> {
     
-    private List<Relation> relations = new LinkedList<>();
-    private List<Attribute> attributes = new LinkedList<>();
+    private Set<Relation> relations = new HashSet<>();
+    private Set<Attribute> attributes = new HashSet<>();
     private String name;
     private Class<N> nodeClass;
 
@@ -91,6 +91,9 @@ public class NodeType<N extends Node> {
     }
 
     private static Class<?> getType(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
+        if (Node.class != relationMapping.type()){
+            return relationMapping.type();
+        }
         if (isMultipleRelation(field)){
             List<String> methodNames = ctxAccessorName(field);
             for (String methodName : methodNames){
@@ -417,8 +420,8 @@ public class NodeType<N extends Node> {
     public static class Builder<N extends Node> {
         
         private String name;
-        private List<Relation> relations;
-        private List<Attribute> attributes;
+        private List<Relation> relations = new ArrayList<>();
+        private List<Attribute> attributes = new ArrayList<>();
         private Class<N> nodeClass;
         
         public Builder(String name, Class<N> nodeClass){

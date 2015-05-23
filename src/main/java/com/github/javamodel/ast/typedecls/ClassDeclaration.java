@@ -19,7 +19,7 @@ import java.util.List;
 @RuleMapping(rule= Java8Parser.NormalClassDeclarationContext.class)
 public class ClassDeclaration extends TypeDeclaration {
 
-    @RelationMapping(ctxAccessorName= "classModifier", filter = "annotation")
+    @RelationMapping(ctxAccessorName= "classModifier", filter = "annotation", type=AnnotationUsageNode.class)
     private List<AnnotationUsageNode> annotations;
     @AttributeMapping(ctxAccessorName= "classModifier", filter = "!annotation")
     private List<Modifier> modifiers;

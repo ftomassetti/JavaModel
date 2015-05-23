@@ -14,14 +14,17 @@ import java.util.function.Function;
 * Created by federico on 21/05/15.
 */
 @Data
-class Attribute {
+@AllArgsConstructor
+public class Attribute {
     private boolean multiple;
     private String name;
     private Class<?> type;
 
-    public Attribute(boolean multiple, String name, Class<?> type) {
-        this.multiple = multiple;
-        this.name = name;
-        this.type = type;
+    public static Attribute single(String name, Class<?> type){
+        return new Attribute(false, name, type);
+    }
+
+    public static Attribute multiple(String name, Class<?> type){
+        return new Attribute(true, name, type);
     }
 }
