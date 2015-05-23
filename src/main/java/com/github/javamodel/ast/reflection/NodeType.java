@@ -11,6 +11,7 @@ import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
+import com.github.javamodel.ast.typedecls.ClassElement;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
 import com.github.javamodel.ast.typedecls.TypeParameter;
 import com.google.common.collect.ImmutableList;
@@ -54,13 +55,15 @@ public class NodeType<N extends Node> {
             Java8Parser.NumericTypeContext.class,
             Java8Parser.FieldModifierContext.class,
             Java8Parser.VariableDeclaratorListContext.class,
-            Java8Parser.ClassModifierContext.class);
+            Java8Parser.ClassModifierContext.class,
+            Java8Parser.ClassBodyDeclarationContext.class);
 
     private static Set<Class> wrappingTypes = ImmutableSet.of(
             Java8Parser.TypeParametersContext.class,
             Java8Parser.TypeParameterListContext.class,
             Java8Parser.SuperinterfacesContext.class,
-            Java8Parser.InterfaceTypeListContext.class);
+            Java8Parser.InterfaceTypeListContext.class,
+            Java8Parser.ClassBodyContext.class);
 
     private NodeType(String name, Class<N> nodeClass){
         this.name = name;
@@ -72,6 +75,7 @@ public class NodeType<N extends Node> {
             TypeParameter.NODE_TYPE,
             ClassTypeRef.NODE_TYPE,
             InterfaceTypeRef.NODE_TYPE,
+            ClassElement.NODE_TYPE,
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
     

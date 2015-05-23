@@ -39,6 +39,9 @@ public class ClassDeclaration extends TypeDeclaration {
     @RelationMapping(ctxAccessorName = "superinterfaces")
     private List<InterfaceTypeRef> interfaces;
 
+    @RelationMapping(ctxAccessorName = "classBody")
+    private List<ClassElement> elements;
+
     public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(ClassDeclaration.class);
 
     public ClassDeclaration(Node parent) {

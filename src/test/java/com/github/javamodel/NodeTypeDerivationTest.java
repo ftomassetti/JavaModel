@@ -10,6 +10,7 @@ import com.github.javamodel.ast.reflection.Attribute;
 import com.github.javamodel.ast.reflection.NodeType;
 import com.github.javamodel.ast.reflection.Relation;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
+import com.github.javamodel.ast.typedecls.ClassElement;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
 import com.github.javamodel.ast.typedecls.TypeParameter;
 import org.junit.Test;
@@ -33,6 +34,7 @@ public class NodeTypeDerivationTest
                 .addRelation(Relation.multiple("typeParameters", TypeParameter.class))
                 .addRelation(Relation.single("superclass", ClassTypeRef.class))
                 .addRelation(Relation.multiple("interfaces", InterfaceTypeRef.class))
+                .addRelation(Relation.multiple("elements", ClassElement.class))
                 .build(), ClassDeclaration.NODE_TYPE);
     }
 
