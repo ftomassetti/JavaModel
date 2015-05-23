@@ -25,6 +25,14 @@ import static org.junit.Assert.assertEquals;
 public class NodeTypeDerivationTest
 {
     @Test
+    public void forPackageDeclaration()
+    {
+        assertEquals(new NodeType.Builder("PackageDeclaration", PackageDeclaration.class)
+                .addAttribute(Attribute.multiple("identifiers", String.class))
+                .build(), PackageDeclaration.NODE_TYPE);
+    }
+
+    @Test
     public void forClassDeclaration()
     {
         assertEquals(new NodeType.Builder("ClassDeclaration", ClassDeclaration.class)
