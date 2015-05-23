@@ -2,6 +2,7 @@ package com.github.javamodel.ast.reflection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * Created by federico on 23/05/15.
@@ -24,5 +25,15 @@ public class ReflectionUtils {
             throw new RuntimeException(e);
         }
         field.setAccessible(false);
+    }
+
+    public static Method methodByName(Class<?> clazz, String name){
+        Method res = null;
+        for (Method m : clazz.getDeclaredMethods()){
+            if (m.getName().equals(name)){
+                res = m;
+            }
+        }
+        return res;
     }
 }

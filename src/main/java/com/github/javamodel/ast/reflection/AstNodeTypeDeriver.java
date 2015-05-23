@@ -35,8 +35,7 @@ public final class AstNodeTypeDeriver {
      * like an enum.
      */
     static Map<Class, Class<? extends Enum>> ruleClassesHostingTokenToNodeTypes = ImmutableMap.of(
-            Java8Parser.ClassModifierContext.class, Modifier.class,
-            Java8Parser.IntegralTypeContext.class, PrimitiveType.class
+            Java8Parser.ClassModifierContext.class, Modifier.class
     );
 
     /**
@@ -49,8 +48,7 @@ public final class AstNodeTypeDeriver {
             Java8Parser.ClassBodyDeclarationContext.class,
             Java8Parser.ClassMemberDeclarationContext.class,
             Java8Parser.UnannTypeContext.class,
-            Java8Parser.UnannPrimitiveTypeContext.class,
-            Java8Parser.NumericTypeContext.class,
+            //Java8Parser.UnannPrimitiveTypeContext.class,
             Java8Parser.FieldModifierContext.class,
             Java8Parser.VariableDeclaratorListContext.class,
             Java8Parser.ClassModifierContext.class,
@@ -213,7 +211,7 @@ public final class AstNodeTypeDeriver {
         }
         if (ruleClassesToNodeTypes == null) {
             ruleClassesToNodeTypes = new HashMap<>();
-            ruleClassesToNodeTypes.put(Java8Parser.IntegralTypeContext.class, PrimitiveTypeRef.NODE_TYPE);
+            ruleClassesToNodeTypes.put(Java8Parser.PrimitiveTypeContext.class, PrimitiveTypeRef.NODE_TYPE);
         }
         ruleClassesToNodeTypes.put(ruleMappings[0].rule(), nodeType);
 
@@ -277,10 +275,14 @@ public final class AstNodeTypeDeriver {
     static AstNodeType findCorrespondingNodeType(Class ruleContextClass){
         AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         if (nodeType == null){
-            if (ruleContextClass.getSuperclass() == null){
+            if (ruleContextClass.getSuperclass() == null || ruleContextClass.getSuperclass() == ParserRuleContext.class){
                 throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
             }
-            return findCorrespondingNodeType(ruleContextClass.getSuperclass());
+            try {
+                return findCorrespondingNodeType(ruleContextClass.getSuperclass());
+            } catch (RuntimeException e){
+                throw new RuntimeException("no corresponding nodeType for "+ruleContextClass, e);
+            }
         }
         return nodeType;
     }

@@ -23,4 +23,26 @@ public class PrimitiveTypeRef extends TypeRef {
     public PrimitiveTypeRef(AstNode parent) {
         super(NODE_TYPE, parent);
     }
+
+    public static PrimitiveTypeRef fromAntlrNode(AstNode parent, Object antlrNode){
+        if (antlrNode instanceof  Java8Parser.UnannPrimitiveTypeContext) {
+            Java8Parser.UnannPrimitiveTypeContext unannPrimitiveTypeContext = (Java8Parser.UnannPrimitiveTypeContext)antlrNode;
+            PrimitiveTypeRef instance = new PrimitiveTypeRef(parent);
+            if (unannPrimitiveTypeContext.numericType() != null) {
+                instance.primitiveType = PrimitiveType.valueOf(unannPrimitiveTypeContext.getText().toUpperCase());
+            } else {
+                instance.primitiveType = PrimitiveType.valueOf(unannPrimitiveTypeContext.getText().toUpperCase());
+            }
+            return instance;
+        } else if (antlrNode instanceof  Java8Parser.PrimitiveTypeContext) {
+            Java8Parser.PrimitiveTypeContext primitiveTypeContext = (Java8Parser.PrimitiveTypeContext) antlrNode;
+            PrimitiveTypeRef instance = new PrimitiveTypeRef(parent);
+            if (primitiveTypeContext.numericType() != null) {
+                throw new UnsupportedOperationException();
+            } else {
+                instance.primitiveType = PrimitiveType.valueOf(primitiveTypeContext.getText().toUpperCase());
+            }
+            return instance;
+        } else throw new RuntimeException();
+    }
 }

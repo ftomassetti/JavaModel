@@ -89,9 +89,10 @@ public class AstNodeType<N extends AstNode> {
 
     private void assignRelation(N node, Field field, ParserRuleContext antlrNode) {
         RelationMapping relationMapping = ReflectionUtils.getSingleAnnotation(field, RelationMapping.class);
+        Object antlrValue =null;
         try {
             Method ctxAccessor = AstNodeTypeDeriver.ctxAccessor(field, antlrNode.getClass());
-            Object antlrValue = ctxAccessor.invoke(antlrNode);
+            antlrValue = ctxAccessor.invoke(antlrNode);
             if (antlrValue == null) return;
             antlrValue = unwrapValue(antlrValue);
             if (AstNodeTypeDeriver.isMultipleRelation(field)) {
@@ -105,8 +106,8 @@ public class AstNodeType<N extends AstNode> {
                 Object astValue = antlrToAstRelationValue(antlrValue, node);
                 ReflectionUtils.assignField(field, node, astValue);
             }
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException("Because " + nodeClass.getCanonicalName() + " has field " + field.getName() + " we expect " + antlrNode.getClass(), e);
+        } catch (RuntimeException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException("Assigning value "+antlrValue.getClass()+" relation to field " + field.getName() + " nodeClass " + nodeClass.getCanonicalName()  + " we expect " + antlrNode.getClass(), e);
         }
     }
 
@@ -157,8 +158,8 @@ public class AstNodeType<N extends AstNode> {
                 }
             }
             return node;
-        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | RuntimeException e) {
+            throw new RuntimeException("Transforming AntlrNode "+antlrNode.getClass(), e);
         }
     }
 
@@ -177,16 +178,28 @@ public class AstNodeType<N extends AstNode> {
     }
 
     static Object antlrToAstRelationValue(Object antlrValue, AstNode astNode) {
-        antlrValue = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
-        if (hasCorrespondingTypeEnum(antlrValue.getClass())) {
-            Class<? extends Enum> correspondingType = getCorrespondingTypeEnum(antlrValue.getClass());
-            ParserRuleContext ctx = (ParserRuleContext) antlrValue;
-            Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-            return convertedValue;
-        } else {
-            AstNodeType elementNodeType = AstNodeTypeDeriver.findCorrespondingNodeType(antlrValue.getClass());
-            AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) antlrValue, astNode);
-            return correspondingElementValue;
+        try {
+            antlrValue = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
+            if (hasCorrespondingTypeEnum(antlrValue.getClass())) {
+                Class<? extends Enum> correspondingType = getCorrespondingTypeEnum(antlrValue.getClass());
+                ParserRuleContext ctx = (ParserRuleContext) antlrValue;
+                Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
+                return convertedValue;
+            } else {
+                AstNodeType elementNodeType = AstNodeTypeDeriver.findCorrespondingNodeType(antlrValue.getClass());
+                Method instantiationMethod = ReflectionUtils.methodByName(elementNodeType.getNodeClass(), "fromAntlrNode");
+                if (instantiationMethod != null) {
+                    try {
+                        return instantiationMethod.invoke(null, astNode, antlrValue);
+                    } catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+                        throw new RuntimeException("invoking " + instantiationMethod + "with " + antlrValue.getClass() + ". AntlrValue " + antlrValue.getClass() + ". Element node type " + elementNodeType.getNodeClass(), e);
+                    }
+                }
+                AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) antlrValue, astNode);
+                return correspondingElementValue;
+            }
+        } catch (Exception e){
+            throw new RuntimeException("antlrToAstRelationValue "+antlrValue.getClass(), e);
         }
     }
 
