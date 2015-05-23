@@ -200,8 +200,18 @@ public class NodeType<N extends Node> {
     }
 
     public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
-        //System.out.println("DERIVING "+nodeClass);
         NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
+
+        if (!nodeClass.getSuperclass().equals(Node.class)){
+            try {
+                NodeType superNodeType = (NodeType)nodeClass.getSuperclass().getDeclaredField("NODE_TYPE").get(null);
+                nodeType.getAttributes().addAll(superNodeType.getAttributes());
+                nodeType.getRelations().addAll(superNodeType.getRelations());
+            } catch (NoSuchFieldException | IllegalAccessException e){
+                throw new RuntimeException(e);
+            }
+        }
+
         RuleMapping[] ruleMappings = nodeClass.getAnnotationsByType(RuleMapping.class);
         if (1 != ruleMappings.length){
             throw new RuntimeException("Expected one RuleMapping on class " + nodeClass);

@@ -1,9 +1,6 @@
 package com.github.javamodel;
 
-import com.github.javamodel.ast.common.AnnotationUsageNode;
-import com.github.javamodel.ast.common.ClassTypeRef;
-import com.github.javamodel.ast.common.InterfaceTypeRef;
-import com.github.javamodel.ast.common.Modifier;
+import com.github.javamodel.ast.common.*;
 import com.github.javamodel.ast.filelevel.CompilationUnit;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.reflection.Attribute;
@@ -38,6 +35,14 @@ public class NodeTypeDerivationTest
         assertEquals(new NodeType.Builder("AnnotationUsageNode", AnnotationUsageNode.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .build(), AnnotationUsageNode.NODE_TYPE);
+    }
+
+    @Test
+    public void forMarkerAnnotationUsageNode()
+    {
+        assertEquals(new NodeType.Builder("MarkerAnnotationUsage", MarkerAnnotationUsage.class)
+                .addAttribute(Attribute.single("typeName", String.class))
+                .build(), MarkerAnnotationUsage.NODE_TYPE);
     }
 
     @Test
