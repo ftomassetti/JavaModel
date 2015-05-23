@@ -5,6 +5,8 @@ import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.common.AnnotationUsageNode;
+import com.github.javamodel.ast.common.ClassTypeRef;
+import com.github.javamodel.ast.common.InterfaceTypeRef;
 import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.reflection.NodeType;
@@ -21,8 +23,21 @@ public class ClassDeclaration extends TypeDeclaration {
 
     @RelationMapping(ctxAccessorName= "classModifier", filter = "annotation", type=AnnotationUsageNode.class)
     private List<AnnotationUsageNode> annotations;
+
     @AttributeMapping(ctxAccessorName= "classModifier", filter = "!annotation")
     private List<Modifier> modifiers;
+
+    @AttributeMapping(ctxAccessorName = "identifier")
+    private String name;
+
+    @RelationMapping()
+    private List<TypeParameter> typeParameters;
+
+    @RelationMapping()
+    private ClassTypeRef superclass;
+
+    @RelationMapping(ctxAccessorName = "superinterfaces")
+    private List<InterfaceTypeRef> interfaces;
 
     public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(ClassDeclaration.class);
 

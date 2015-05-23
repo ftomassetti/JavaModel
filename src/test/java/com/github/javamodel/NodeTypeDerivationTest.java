@@ -1,6 +1,8 @@
 package com.github.javamodel;
 
 import com.github.javamodel.ast.common.AnnotationUsageNode;
+import com.github.javamodel.ast.common.ClassTypeRef;
+import com.github.javamodel.ast.common.InterfaceTypeRef;
 import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.filelevel.CompilationUnit;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
@@ -9,7 +11,10 @@ import com.github.javamodel.ast.reflection.NodeType;
 import com.github.javamodel.ast.reflection.Relation;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
+import com.github.javamodel.ast.typedecls.TypeParameter;
 import org.junit.Test;
+
+import java.lang.reflect.Type;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,6 +29,10 @@ public class NodeTypeDerivationTest
         assertEquals(new NodeType.Builder("ClassDeclaration", ClassDeclaration.class)
                 .addRelation(Relation.multiple("annotations", AnnotationUsageNode.class))
                 .addAttribute(Attribute.multiple("modifiers", Modifier.class))
+                .addAttribute(Attribute.single("name", String.class))
+                .addRelation(Relation.multiple("typeParameters", TypeParameter.class))
+                .addRelation(Relation.single("superclass", ClassTypeRef.class))
+                .addRelation(Relation.multiple("interfaces", InterfaceTypeRef.class))
                 .build(), ClassDeclaration.NODE_TYPE);
     }
 

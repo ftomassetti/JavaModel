@@ -5,11 +5,14 @@ import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.common.AnnotationUsageNode;
+import com.github.javamodel.ast.common.ClassTypeRef;
+import com.github.javamodel.ast.common.InterfaceTypeRef;
 import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
+import com.github.javamodel.ast.typedecls.TypeParameter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +56,12 @@ public class NodeType<N extends Node> {
             Java8Parser.VariableDeclaratorListContext.class,
             Java8Parser.ClassModifierContext.class);
 
+    private static Set<Class> wrappingTypes = ImmutableSet.of(
+            Java8Parser.TypeParametersContext.class,
+            Java8Parser.TypeParameterListContext.class,
+            Java8Parser.SuperinterfacesContext.class,
+            Java8Parser.InterfaceTypeListContext.class);
+
     private NodeType(String name, Class<N> nodeClass){
         this.name = name;
         this.nodeClass = nodeClass;
@@ -60,6 +69,9 @@ public class NodeType<N extends Node> {
     
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
+            TypeParameter.NODE_TYPE,
+            ClassTypeRef.NODE_TYPE,
+            InterfaceTypeRef.NODE_TYPE,
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
     
@@ -83,11 +95,43 @@ public class NodeType<N extends Node> {
     }
 
     private static Relation deriveRelation(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
-        return new Relation(getType(relationMapping, field, ctxClass), isMultipleRelation(field), field.getName());
+        Class<?> typeClass = getType(relationMapping, field, ctxClass);
+        if (typeClass == null){
+            throw new RuntimeException("Finding type for field "+field);
+        }
+        return new Relation(typeClass, isMultipleRelation(field), field.getName());
     }
 
     private static Attribute deriveAttribute(AttributeMapping attributeMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
         return new Attribute(isMultipleAttribute(field), field.getName(), getType(attributeMapping, field, ctxClass));
+    }
+
+    private static Class<?> skipWrappingType(Class<?> type){
+        if (wrappingTypes.contains(type)){
+            Set<Method> methods = new HashSet<>();
+            for (Method method : type.getDeclaredMethods()){
+                if (method.getParameterCount() == 0 && !method.getName().equals("getRuleIndex")){
+                    methods.add(method);
+                }
+            }
+            if (methods.size() == 1){
+                Method m = methods.iterator().next();
+                try {
+                    if (List.class.equals(m.getReturnType())) {
+                        m = type.getDeclaredMethod(m.getName(), int.class);
+                        return skipWrappingType(m.getReturnType());
+                    } else {
+                        return skipWrappingType(methods.iterator().next().getReturnType());
+                    }
+                } catch (NoSuchMethodException e){
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new RuntimeException("skipWrappingType " + type.getName() + ", looking for methods " + methods);
+            }
+        } else {
+            return type;
+        }
     }
 
     private static Class<?> getType(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
@@ -96,14 +140,35 @@ public class NodeType<N extends Node> {
         }
         if (isMultipleRelation(field)){
             List<String> methodNames = ctxAccessorName(field);
+            // first look for methods with 1 param
             for (String methodName : methodNames){
                 for (Method method : ctxClass.getDeclaredMethods()){
                     if (method.getName().equals(methodName) && method.getParameterCount() == 1){
-                        return findCorrespondingNodeClass(method.getReturnType());
+                        Class<?> type = skipWrappingType(method.getReturnType());
+                        System.out.println("FROM "+method.getReturnType()+" TO "+type);
+                        Class<?> clazz = findCorrespondingNodeClass(type);
+                        if (clazz == null){
+                            throw new RuntimeException("No correspondence found for "+type);
+                        }
+                        return clazz;
                     }
                 }
             }
-            throw new RuntimeException();
+            // first look for methods with 0 param
+            for (String methodName : methodNames){
+                for (Method method : ctxClass.getDeclaredMethods()){
+                    if (method.getName().equals(methodName) && method.getParameterCount() == 0){
+                        Class<?> type = skipWrappingType(method.getReturnType());
+                        System.out.println("FROM "+method.getReturnType()+" TO "+type);
+                        Class<?> clazz = findCorrespondingNodeClass(type);
+                        if (clazz == null){
+                            throw new RuntimeException("No correspondence found for "+type);
+                        }
+                        return clazz;
+                    }
+                }
+            }
+            throw new RuntimeException("Unable to find type for "+field+", methodNames "+methodNames+" in class "+ctxClass.getName());
         } else {
             return field.getType();
         }
@@ -169,7 +234,7 @@ public class NodeType<N extends Node> {
             if (isMultipleRelation(field) && field.getName().endsWith("s")){
                 String singleName = field.getName().substring(0, field.getName().length() - 1);
                 String singleNameLowercase = singleName.substring(0, 1).toUpperCase() + singleName.substring(1);
-                return ImmutableList.of(singleName, singleNameLowercase);
+                return ImmutableList.of(singleName, singleNameLowercase, singleName+"s", singleNameLowercase+"s");
             } else {
                 return ImmutableList.of(field.getName());
             }
@@ -215,10 +280,13 @@ public class NodeType<N extends Node> {
         if (nodeType == null){
             return ruleClassesHostingTokenToNodeTypes.get(ruleContextClass);
         }
+        if (nodeType.getNodeClass() == null){
+            throw new RuntimeException();
+        }
         return nodeType.getNodeClass();
     }
 
-    private Object getTransparent(Object value){
+    private static Object getTransparent(Object value){
         if (transparentTypes.contains(value.getClass())){
             Object node = null;
             for (Method method : value.getClass().getDeclaredMethods()){

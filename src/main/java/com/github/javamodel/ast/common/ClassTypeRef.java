@@ -7,15 +7,15 @@ import com.github.javamodel.ast.reflection.NodeType;
 import lombok.Data;
 
 /**
- * Created by federico on 22/05/15.
+ * Created by federico on 23/05/15.
  */
 @Data
-@RuleMapping(rule= Java8Parser.AnnotationContext.class)
-public abstract class AnnotationUsageNode extends Node {
+@RuleMapping(rule= Java8Parser.ClassTypeContext.class)
+public class ClassTypeRef extends Node {
 
-    public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(AnnotationUsageNode.class);
+    public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(ClassTypeRef.class);
 
-    protected AnnotationUsageNode(Node parent) {
+    protected ClassTypeRef(Node parent) {
         super(NODE_TYPE, parent);
     }
 }
