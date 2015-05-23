@@ -4,10 +4,7 @@ import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
-import com.github.javamodel.ast.common.AnnotationUsageNode;
-import com.github.javamodel.ast.common.ClassTypeRef;
-import com.github.javamodel.ast.common.InterfaceTypeRef;
-import com.github.javamodel.ast.common.Modifier;
+import com.github.javamodel.ast.common.*;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
@@ -76,6 +73,12 @@ public class NodeType<N extends Node> {
             TypeParameter.NODE_TYPE,
             ClassTypeRef.NODE_TYPE,
             InterfaceTypeRef.NODE_TYPE,
+            AnnotationValuePair.NODE_TYPE,
+            AnnotationValue.NODE_TYPE,
+            AnnotationUsageNode.NODE_TYPE,
+            MarkerAnnotationUsage.NODE_TYPE,
+            SingleElementAnnotationUsage.NODE_TYPE,
+            MultipleElementsAnnotationUsage.NODE_TYPE,
             ClassElement.NODE_TYPE,
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);

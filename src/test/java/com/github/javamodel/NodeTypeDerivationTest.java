@@ -12,8 +12,6 @@ import com.github.javamodel.ast.typedecls.TypeDeclaration;
 import com.github.javamodel.ast.typedecls.TypeParameter;
 import org.junit.Test;
 
-import java.lang.reflect.Type;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -38,11 +36,29 @@ public class NodeTypeDerivationTest
     }
 
     @Test
-    public void forMarkerAnnotationUsageNode()
+    public void forMarkerAnnotationUsage()
     {
         assertEquals(new NodeType.Builder("MarkerAnnotationUsage", MarkerAnnotationUsage.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .build(), MarkerAnnotationUsage.NODE_TYPE);
+    }
+
+    @Test
+    public void forSingleElementAnnotationUsage()
+    {
+        assertEquals(new NodeType.Builder("SingleElementAnnotationUsage", SingleElementAnnotationUsage.class)
+                .addAttribute(Attribute.single("typeName", String.class))
+                .addRelation(Relation.single("value", AnnotationValue.class))
+                .build(), SingleElementAnnotationUsage.NODE_TYPE);
+    }
+
+    @Test
+    public void forMultipleElementsAnnotationUsage()
+    {
+        assertEquals(new NodeType.Builder("MultipleElementsAnnotationUsage", MultipleElementsAnnotationUsage.class)
+                .addAttribute(Attribute.single("typeName", String.class))
+                .addRelation(Relation.multiple("values", AnnotationValuePair.class))
+                .build(), MultipleElementsAnnotationUsage.NODE_TYPE);
     }
 
     @Test
