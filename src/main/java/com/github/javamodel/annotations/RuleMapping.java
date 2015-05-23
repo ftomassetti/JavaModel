@@ -8,10 +8,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by ftomassetti on 22/05/15.
+ * Define the association between an AstNode class and an Antlr node class.
+ *
+ * @author Federico Tomassetti
+ * @since May 2015
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RuleMapping {
+
+    /**
+     * Type of the corresponding Antlr node.
+     */
     Class<? extends ParserRuleContext> rule();
 }

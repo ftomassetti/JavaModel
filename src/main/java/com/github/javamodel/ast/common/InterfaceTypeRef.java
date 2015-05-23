@@ -2,8 +2,8 @@ package com.github.javamodel.ast.common;
 
 import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.RuleMapping;
-import com.github.javamodel.ast.Node;
-import com.github.javamodel.ast.reflection.NodeType;
+import com.github.javamodel.ast.AstNode;
+import com.github.javamodel.ast.reflection.AstNodeType;
 import lombok.Data;
 
 /**
@@ -11,11 +11,11 @@ import lombok.Data;
  */
 @Data
 @RuleMapping(rule= Java8Parser.InterfaceTypeContext.class)
-public class InterfaceTypeRef extends Node {
+public class InterfaceTypeRef extends AstNode {
 
-    public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(InterfaceTypeRef.class);
+    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(InterfaceTypeRef.class);
 
-    protected InterfaceTypeRef(Node parent) {
+    protected InterfaceTypeRef(AstNode parent) {
         super(NODE_TYPE, parent);
     }
 }

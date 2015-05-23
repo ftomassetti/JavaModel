@@ -5,7 +5,7 @@ import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.common.*;
-import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.ClassElement;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 * Created by federico on 21/05/15.
 */
 @Data
-public class NodeType<N extends Node> {
+public class AstNodeType<N extends AstNode> {
 
     @Getter
     private Set<Relation> relations = new HashSet<>();
@@ -80,7 +80,7 @@ public class NodeType<N extends Node> {
             Java8Parser.ClassBodyContext.class,
             Java8Parser.ElementValuePairListContext.class);
 
-    private NodeType(String name, Class<N> nodeClass){
+    private AstNodeType(String name, Class<N> nodeClass){
         this.name = name;
         this.nodeClass = nodeClass;
     }
@@ -101,7 +101,7 @@ public class NodeType<N extends Node> {
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
     
     private static Map<Class, Class> ruleClassesToNodeClasses;
-    private static Map<Class, NodeType> ruleClassesToNodeTypes;
+    private static Map<Class, AstNodeType> ruleClassesToNodeTypes;
 
     private static  <A extends Annotation> A getSingleAnnotation(Field field, Class<A> annotationClass){
         A[] annotations = field.getAnnotationsByType(annotationClass);
@@ -160,7 +160,7 @@ public class NodeType<N extends Node> {
     }
 
     private static Class<?> getType(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
-        if (Node.class != relationMapping.type()){
+        if (AstNode.class != relationMapping.type()){
             return relationMapping.type();
         }
         if (isMultipleRelation(field)){
@@ -219,12 +219,12 @@ public class NodeType<N extends Node> {
         }
     }
 
-    public static <N extends  Node> NodeType deriveFromNodeClass(Class<N> nodeClass) {
-        NodeType nodeType = new NodeType(nodeClass.getSimpleName(), nodeClass);
+    public static <N extends AstNode> AstNodeType deriveFromNodeClass(Class<N> nodeClass) {
+        AstNodeType nodeType = new AstNodeType(nodeClass.getSimpleName(), nodeClass);
 
-        if (!nodeClass.getSuperclass().equals(Node.class)){
+        if (!nodeClass.getSuperclass().equals(AstNode.class)){
             try {
-                NodeType superNodeType = (NodeType)nodeClass.getSuperclass().getDeclaredField("NODE_TYPE").get(null);
+                AstNodeType superNodeType = (AstNodeType)nodeClass.getSuperclass().getDeclaredField("NODE_TYPE").get(null);
                 nodeType.getAttributes().addAll(superNodeType.getAttributes());
                 nodeType.getRelations().addAll(superNodeType.getRelations());
             } catch (NoSuchFieldException | IllegalAccessException e){
@@ -298,9 +298,9 @@ public class NodeType<N extends Node> {
         return List.class.isAssignableFrom(field.getType());
     }
     
-    private static NodeType findCorrespondingNodeType(Class ruleContextClass){
+    private static AstNodeType findCorrespondingNodeType(Class ruleContextClass){
         System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
-        NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
+        AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         System.out.println("  node type found is " + nodeType);
         if (nodeType == null){
             throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
@@ -310,7 +310,7 @@ public class NodeType<N extends Node> {
 
     private static Class<?> findCorrespondingNodeClass(Class ruleContextClass){
         System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
-        NodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
+        AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         System.out.println("  node type found is " + nodeType);
         if (nodeType == null){
             return ruleClassesHostingTokenToNodeTypes.get(ruleContextClass);
@@ -363,7 +363,7 @@ public class NodeType<N extends Node> {
         }
     }
 
-    private Object convertValue(Object originalValueElement, Node node){
+    private Object convertValue(Object originalValueElement, AstNode node){
         Object valueElement = getTransparent(originalValueElement);
         if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
             Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
@@ -373,14 +373,14 @@ public class NodeType<N extends Node> {
             System.out.println("  converted to enum value " + convertedValue);
             return convertedValue;
         } else {
-            NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
-            Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
+            AstNodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
+            AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
             System.out.println("  converted to " + correspondingElementValue);
             return correspondingElementValue;
         }
     }
 
-    private Object convertAttributeValue(Object originalValueElement, Node node){
+    private Object convertAttributeValue(Object originalValueElement, AstNode node){
         Object valueElement = getTransparent(originalValueElement);
         if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
             Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
@@ -424,13 +424,13 @@ public class NodeType<N extends Node> {
         } else return value;
     }
     
-    public N fromAntlrNode(ParserRuleContext ruleContext, Node parentNode){
+    public N fromAntlrNode(ParserRuleContext ruleContext, AstNode parentNode){
         try {
             N node = null;
             if (parentNode == null) {
                 node = nodeClass.newInstance();
             } else {
-                node = nodeClass.getConstructor(Node.class).newInstance(parentNode);
+                node = nodeClass.getConstructor(AstNode.class).newInstance(parentNode);
             }
             System.out.println("\n=== AntlrNode "+ruleContext.getClass().getSimpleName()+" ===\n");
             for (Field field : nodeClass.getDeclaredFields()){
@@ -556,7 +556,7 @@ public class NodeType<N extends Node> {
         return name;
     }
 
-    public static class Builder<N extends Node> {
+    public static class Builder<N extends AstNode> {
         
         private String name;
         private List<Relation> relations = new ArrayList<>();
@@ -578,8 +578,8 @@ public class NodeType<N extends Node> {
             return this;
         }
         
-        public NodeType<N> build(){
-            NodeType nodeType = new NodeType(name, nodeClass);
+        public AstNodeType<N> build(){
+            AstNodeType nodeType = new AstNodeType(name, nodeClass);
             nodeType.relations.addAll(relations);
             nodeType.attributes.addAll(attributes);
             return nodeType;

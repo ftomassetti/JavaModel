@@ -1,6 +1,6 @@
 package com.github.javamodel;
 
-import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.parsing.NodeTree;
 import com.github.javamodel.parsing.ParserCli;
 import org.junit.Test;
@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class NodeTypeTest
 {
     private String toTreeString(String code){
-        Node root = new ParserCli().parse(code);
+        AstNode root = new ParserCli().parse(code);
         return NodeTree.treeString(root, "root", 0).trim();
     }
 

@@ -8,8 +8,8 @@ import com.github.javamodel.ast.common.AnnotationUsageNode;
 import com.github.javamodel.ast.common.ClassTypeRef;
 import com.github.javamodel.ast.common.InterfaceTypeRef;
 import com.github.javamodel.ast.common.Modifier;
-import com.github.javamodel.ast.Node;
-import com.github.javamodel.ast.reflection.NodeType;
+import com.github.javamodel.ast.AstNode;
+import com.github.javamodel.ast.reflection.AstNodeType;
 import lombok.Data;
 
 import java.util.List;
@@ -42,9 +42,9 @@ public class ClassDeclaration extends TypeDeclaration {
     @RelationMapping(ctxAccessorName = "classBody")
     private List<ClassElement> elements;
 
-    public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(ClassDeclaration.class);
+    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(ClassDeclaration.class);
 
-    public ClassDeclaration(Node parent) {
+    public ClassDeclaration(AstNode parent) {
         super(NODE_TYPE, parent);
     }
 

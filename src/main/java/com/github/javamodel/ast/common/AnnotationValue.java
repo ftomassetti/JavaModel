@@ -2,8 +2,8 @@ package com.github.javamodel.ast.common;
 
 import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.RuleMapping;
-import com.github.javamodel.ast.Node;
-import com.github.javamodel.ast.reflection.NodeType;
+import com.github.javamodel.ast.AstNode;
+import com.github.javamodel.ast.reflection.AstNodeType;
 import lombok.Data;
 
 /**
@@ -11,11 +11,11 @@ import lombok.Data;
  */
 @Data
 @RuleMapping(rule= Java8Parser.ElementValueContext.class)
-public class AnnotationValue extends Node {
+public class AnnotationValue extends AstNode {
 
-    public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(AnnotationValue.class);
+    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(AnnotationValue.class);
 
-    protected AnnotationValue(Node parent) {
+    protected AnnotationValue(AstNode parent) {
         super(NODE_TYPE, parent);
     }
 }

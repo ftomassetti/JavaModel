@@ -1,16 +1,12 @@
 package com.github.javamodel.ast.reflection;
 
-import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.AstNode;
 import com.google.common.collect.ImmutableList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
 * Created by federico on 21/05/15.
@@ -30,7 +26,7 @@ public class Attribute {
         return new Attribute(true, name, type);
     }
 
-    public List<?> get(Node node) {
+    public List<?> get(AstNode node) {
         try {
             Object result = node.getClass().getDeclaredMethod("get" + name.substring(0, 1).toUpperCase() + name.substring(1)).invoke(node);
             if (result instanceof List) return (List)result;

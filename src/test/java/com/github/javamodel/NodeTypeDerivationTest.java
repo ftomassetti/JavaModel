@@ -4,7 +4,7 @@ import com.github.javamodel.ast.common.*;
 import com.github.javamodel.ast.filelevel.CompilationUnit;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.reflection.Attribute;
-import com.github.javamodel.ast.reflection.NodeType;
+import com.github.javamodel.ast.reflection.AstNodeType;
 import com.github.javamodel.ast.reflection.Relation;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.ClassElement;
@@ -22,7 +22,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forPackageDeclaration()
     {
-        assertEquals(new NodeType.Builder("PackageDeclaration", PackageDeclaration.class)
+        assertEquals(new AstNodeType.Builder("PackageDeclaration", PackageDeclaration.class)
                 .addAttribute(Attribute.multiple("identifiers", String.class))
                 .build(), PackageDeclaration.NODE_TYPE);
     }
@@ -30,7 +30,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forAnnotationUsageNode()
     {
-        assertEquals(new NodeType.Builder("AnnotationUsageNode", AnnotationUsageNode.class)
+        assertEquals(new AstNodeType.Builder("AnnotationUsageNode", AnnotationUsageNode.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .build(), AnnotationUsageNode.NODE_TYPE);
     }
@@ -38,7 +38,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forMarkerAnnotationUsage()
     {
-        assertEquals(new NodeType.Builder("MarkerAnnotationUsage", MarkerAnnotationUsage.class)
+        assertEquals(new AstNodeType.Builder("MarkerAnnotationUsage", MarkerAnnotationUsage.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .build(), MarkerAnnotationUsage.NODE_TYPE);
     }
@@ -46,7 +46,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forSingleElementAnnotationUsage()
     {
-        assertEquals(new NodeType.Builder("SingleElementAnnotationUsage", SingleElementAnnotationUsage.class)
+        assertEquals(new AstNodeType.Builder("SingleElementAnnotationUsage", SingleElementAnnotationUsage.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .addRelation(Relation.single("value", AnnotationValue.class))
                 .build(), SingleElementAnnotationUsage.NODE_TYPE);
@@ -55,7 +55,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forMultipleElementsAnnotationUsage()
     {
-        assertEquals(new NodeType.Builder("MultipleElementsAnnotationUsage", MultipleElementsAnnotationUsage.class)
+        assertEquals(new AstNodeType.Builder("MultipleElementsAnnotationUsage", MultipleElementsAnnotationUsage.class)
                 .addAttribute(Attribute.single("typeName", String.class))
                 .addRelation(Relation.multiple("values", AnnotationValuePair.class))
                 .build(), MultipleElementsAnnotationUsage.NODE_TYPE);
@@ -64,7 +64,7 @@ public class NodeTypeDerivationTest
     @Test
     public void forClassDeclaration()
     {
-        assertEquals(new NodeType.Builder("ClassDeclaration", ClassDeclaration.class)
+        assertEquals(new AstNodeType.Builder("ClassDeclaration", ClassDeclaration.class)
                 .addRelation(Relation.multiple("annotations", AnnotationUsageNode.class))
                 .addAttribute(Attribute.multiple("modifiers", Modifier.class))
                 .addAttribute(Attribute.single("name", String.class))
@@ -78,9 +78,9 @@ public class NodeTypeDerivationTest
     @Test
     public void forCompilationUnit()
     {
-        assertEquals(new NodeType.Builder("CompilationUnit", CompilationUnit.class)
+        assertEquals(new AstNodeType.Builder("CompilationUnit", CompilationUnit.class)
                 .addRelation(Relation.single("packageDeclaration", PackageDeclaration.class))
-                .addRelation(Relation.multiple("topTypesDeclarations", TypeDeclaration.class))
+                .addRelation(Relation.multiple("topTypes", TypeDeclaration.class))
                 .build(), CompilationUnit.NODE_TYPE);
     }
 
