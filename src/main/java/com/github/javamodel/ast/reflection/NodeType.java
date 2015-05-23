@@ -63,7 +63,8 @@ public class NodeType<N extends Node> {
             Java8Parser.TypeParameterListContext.class,
             Java8Parser.SuperinterfacesContext.class,
             Java8Parser.InterfaceTypeListContext.class,
-            Java8Parser.ClassBodyContext.class);
+            Java8Parser.ClassBodyContext.class,
+            Java8Parser.ElementValuePairListContext.class);
 
     private NodeType(String name, Class<N> nodeClass){
         this.name = name;

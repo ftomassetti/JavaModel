@@ -1,6 +1,7 @@
 package com.github.javamodel.ast.common;
 
 import com.github.javamodel.Java8Parser;
+import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.reflection.NodeType;
@@ -15,7 +16,10 @@ public abstract class AnnotationUsageNode extends Node {
 
     public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(AnnotationUsageNode.class);
 
-    protected AnnotationUsageNode(Node parent) {
-        super(NODE_TYPE, parent);
+    @AttributeMapping
+    private String typeName;
+
+    protected AnnotationUsageNode(NodeType nodeType, Node parent) {
+        super(nodeType, parent);
     }
 }
