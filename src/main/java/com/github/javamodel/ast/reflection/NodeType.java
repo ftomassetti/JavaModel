@@ -9,10 +9,13 @@ import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
 import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import com.github.javamodel.ast.typedecls.TypeDeclaration;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -76,14 +79,32 @@ public class NodeType<N extends Node> {
         return nodeType;
     }
     
-    private String ctxAccessorName(Field field){
+    private List<String> ctxAccessorName(Field field, RuleContext ruleContext){
         RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
         if (relationMappings.length != 1) throw new RuntimeException();
         if (relationMappings[0].ctxAccessorName().isEmpty()) {
-            return field.getName();
+            if (isMultipleRelation(field) && field.getName().endsWith("s")){
+                String singleName = field.getName().substring(0, field.getName().length() - 1);
+                String singleNameLowercase = singleName.substring(0, 1).toUpperCase() + singleName.substring(1);
+                return ImmutableList.of(singleName, singleNameLowercase);
+            } else {
+                return ImmutableList.of(field.getName());
+            }
         } else {
-            return relationMappings[0].ctxAccessorName();
+            return ImmutableList.of(relationMappings[0].ctxAccessorName());
         }
+    }
+
+    private Method ctxAccessor(Field field, RuleContext ruleContext){
+        List<String> candidates = ctxAccessorName(field, ruleContext);
+        for (String candidateName : candidates){
+            for (Method method : ruleContext.getClass().getDeclaredMethods()){
+                if (method.getName().equals(candidateName) && method.getParameterCount() == 0){
+                    return method;
+                }
+            }
+        }
+        throw new RuntimeException("Class "+ruleContext.getClass()+" was expected to have one method in "+candidates);
     }
     
     private boolean isMultipleRelation(Field field){
@@ -144,13 +165,16 @@ public class NodeType<N extends Node> {
 
     private Object convertValue(Object originalValueElement, Node node){
         Object valueElement = getTransparent(originalValueElement);
-        if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())){
+        if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
             Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
             System.out.println("  converted to enum type " + correspondingType);
-            ParserRuleContext ctx = (ParserRuleContext)originalValueElement;
+            ParserRuleContext ctx = (ParserRuleContext) originalValueElement;
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
             System.out.println("  converted to enum value " + convertedValue);
             return convertedValue;
+        } else if (TerminalNode.class.isAssignableFrom(valueElement.getClass())) {
+            TerminalNode terminalNode = (TerminalNode)valueElement;
+            return terminalNode.getText();
         } else {
             NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
             Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
@@ -173,9 +197,8 @@ public class NodeType<N extends Node> {
                     RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
                     if (relationMappings.length != 1) throw new RuntimeException();
                     System.out.println("Considering field " + field.getName());
-                    String ctxAccessorName = ctxAccessorName(field);
                     try {
-                        Method ctxAccessor = ruleContext.getClass().getDeclaredMethod(ctxAccessorName);
+                        Method ctxAccessor = ctxAccessor(field, ruleContext);
                         Object value = ctxAccessor.invoke(ruleContext);
                         System.out.println("  Value obtained is " + value);
                         if (isMultipleRelation(field)){
@@ -201,8 +224,8 @@ public class NodeType<N extends Node> {
                                 field.setAccessible(false);
                             }
                         }
-                    } catch (NoSuchMethodException | InvocationTargetException e){
-                        throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass()+" to have method "+ctxAccessorName, e);
+                    } catch (InvocationTargetException e){
+                        throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass(), e);
                     }
                 }
             }
