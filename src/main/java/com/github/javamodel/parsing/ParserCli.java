@@ -5,6 +5,7 @@ import com.github.javamodel.Java8Parser;
 import com.github.javamodel.ast.filelevel.CompilationUnit;
 import com.github.javamodel.ast.Node;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
+import com.github.javamodel.ast.typedecls.ClassDeclaration;
 import org.antlr.v4.runtime.*;
 
 import java.io.ByteArrayInputStream;
@@ -46,6 +47,7 @@ public class ParserCli
         //NodeTree.printTree(root, "root", 0, stringBuffer);
         System.out.println("ROOT="+root);
         System.out.println("CompilationUnit node type="+CompilationUnit.NODE_TYPE);
+        System.out.println("ClassDeclaration node type="+ ClassDeclaration.NODE_TYPE);
         System.out.println("PackageDeclaration node type="+ PackageDeclaration.NODE_TYPE);
     }
 }

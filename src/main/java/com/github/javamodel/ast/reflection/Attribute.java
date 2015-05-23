@@ -17,32 +17,11 @@ import java.util.function.Function;
 class Attribute {
     private boolean multiple;
     private String name;
-    private Method method;
-    private Function<ParserRuleContext, String> function;
+    private Class<?> type;
 
-    public Attribute(boolean multiple, String name, Method method) {
+    public Attribute(boolean multiple, String name, Class<?> type) {
         this.multiple = multiple;
         this.name = name;
-        this.method = method;
-    }
-
-    public Attribute(boolean multiple, String name, Function<ParserRuleContext, String> function) {
-        this.multiple = multiple;
-        this.name = name;
-        this.function = function;
-    }
-
-    public Object getSingleValue(ParserRuleContext wrapped){
-        if (multiple) throw new IllegalStateException();
-        if (function != null) {
-            return function.apply(wrapped);
-        }
-        try {
-            return method.invoke(wrapped);
-        } catch (IllegalAccessException e){
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+        this.type = type;
     }
 }

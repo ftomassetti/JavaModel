@@ -83,11 +83,11 @@ public class NodeType<N extends Node> {
     }
 
     private static Relation deriveRelation(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
-        return new Relation(getType(relationMapping, field, ctxClass), isMultipleRelation(field), field.getName(), null);
+        return new Relation(getType(relationMapping, field, ctxClass), isMultipleRelation(field), field.getName());
     }
 
     private static Attribute deriveAttribute(AttributeMapping attributeMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
-        return new Attribute(isMultipleAttribute(field), field.getName(), (Method)null);
+        return new Attribute(isMultipleAttribute(field), field.getName(), getType(attributeMapping, field, ctxClass));
     }
 
     private static Class<?> getType(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
@@ -97,6 +97,26 @@ public class NodeType<N extends Node> {
                 for (Method method : ctxClass.getDeclaredMethods()){
                     if (method.getName().equals(methodName) && method.getParameterCount() == 1){
                         return findCorrespondingNodeClass(method.getReturnType());
+                    }
+                }
+            }
+            throw new RuntimeException();
+        } else {
+            return field.getType();
+        }
+    }
+
+    private static Class<?> getType(AttributeMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass) {
+        if (isMultipleAttribute(field)){
+            List<String> methodNames = ctxAccessorName(field);
+            for (String methodName : methodNames){
+                for (Method method : ctxClass.getDeclaredMethods()){
+                    if (method.getName().equals(methodName) && method.getParameterCount() == 1){
+                        if (ruleClassesHostingTokenToNodeTypes.containsKey(method.getReturnType())){
+                            return ruleClassesHostingTokenToNodeTypes.get(method.getReturnType());
+                        } else {
+                            return String.class;
+                        }
                     }
                 }
             }
