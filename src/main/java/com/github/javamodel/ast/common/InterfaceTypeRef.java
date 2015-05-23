@@ -4,6 +4,7 @@ import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.reflection.AstNodeType;
+import com.github.javamodel.ast.reflection.AstNodeTypeDeriver;
 import lombok.Data;
 
 /**
@@ -13,7 +14,7 @@ import lombok.Data;
 @RuleMapping(rule= Java8Parser.InterfaceTypeContext.class)
 public class InterfaceTypeRef extends AstNode {
 
-    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(InterfaceTypeRef.class);
+    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(InterfaceTypeRef.class);
 
     protected InterfaceTypeRef(AstNode parent) {
         super(NODE_TYPE, parent);

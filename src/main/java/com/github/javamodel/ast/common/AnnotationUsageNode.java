@@ -5,6 +5,7 @@ import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.reflection.AstNodeType;
+import com.github.javamodel.ast.reflection.AstNodeTypeDeriver;
 import lombok.Data;
 
 /**
@@ -14,7 +15,7 @@ import lombok.Data;
 @RuleMapping(rule= Java8Parser.AnnotationContext.class)
 public abstract class AnnotationUsageNode extends AstNode {
 
-    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(AnnotationUsageNode.class);
+    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(AnnotationUsageNode.class);
 
     @AttributeMapping
     private String typeName;

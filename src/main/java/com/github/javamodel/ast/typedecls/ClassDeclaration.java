@@ -10,6 +10,7 @@ import com.github.javamodel.ast.common.InterfaceTypeRef;
 import com.github.javamodel.ast.common.Modifier;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.reflection.AstNodeType;
+import com.github.javamodel.ast.reflection.AstNodeTypeDeriver;
 import lombok.Data;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class ClassDeclaration extends TypeDeclaration {
     @RelationMapping(ctxAccessorName = "classBody")
     private List<ClassElement> elements;
 
-    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(ClassDeclaration.class);
+    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(ClassDeclaration.class);
 
     public ClassDeclaration(AstNode parent) {
         super(NODE_TYPE, parent);

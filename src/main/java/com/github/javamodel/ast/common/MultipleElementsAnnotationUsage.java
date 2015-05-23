@@ -5,6 +5,7 @@ import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.reflection.AstNodeType;
+import com.github.javamodel.ast.reflection.AstNodeTypeDeriver;
 import lombok.Data;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 @RuleMapping(rule= Java8Parser.NormalAnnotationContext.class)
 public class MultipleElementsAnnotationUsage extends AnnotationUsageNode {
 
-    public static final AstNodeType NODE_TYPE = AstNodeType.deriveFromNodeClass(MultipleElementsAnnotationUsage.class);
+    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(MultipleElementsAnnotationUsage.class);
 
     @RelationMapping(ctxAccessorName = "elementValuePairList")
     private List<AnnotationValuePair> values;
