@@ -61,6 +61,7 @@ public final class AstNodeTypeDeriver {
             Java8Parser.TypeParametersContext.class,
             Java8Parser.TypeParameterListContext.class,
             Java8Parser.SuperinterfacesContext.class,
+            Java8Parser.SuperclassContext.class,
             Java8Parser.InterfaceTypeListContext.class,
             Java8Parser.ClassBodyContext.class,
             Java8Parser.ElementValuePairListContext.class,

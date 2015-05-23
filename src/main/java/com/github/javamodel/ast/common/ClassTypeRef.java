@@ -16,7 +16,7 @@ public class ClassTypeRef extends TypeRef {
 
     public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(ClassTypeRef.class);
 
-    protected ClassTypeRef(AstNode parent) {
+    public ClassTypeRef(AstNode parent) {
         super(NODE_TYPE, parent);
     }
 }

@@ -33,6 +33,12 @@ public class NodeTypeTest
     }
 
     @Test
+    public void parseClassWithExtendsClause()
+    {
+        assertEquals("", toTreeString("class A extends B { }"));
+    }
+
+    @Test
     public void parseInternalClasses()
     {
         assertEquals("root : CompilationUnit\n" +
