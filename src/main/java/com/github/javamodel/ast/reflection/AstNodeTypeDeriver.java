@@ -16,29 +16,34 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 /**
- * Created by federico on 23/05/15.
+ * It derives AstNodeType from Antlr RuleContext classes.
  */
 public final class AstNodeTypeDeriver {
 
     private AstNodeTypeDeriver(){
-
+        // prevent instantiation
     }
 
+    /**
+     * In some cases we want to associate to a simple token a class different from a String,
+     * like an enum.
+     */
     static Map<Class, Class<? extends Enum>> ruleClassesHostingTokenToNodeTypes = ImmutableMap.of(
             Java8Parser.ClassModifierContext.class, Modifier.class
     );
 
-    static Set<Class> transparentTypes = ImmutableSet.of(
+    /**
+     * There are types which just represent alternatives: we want to ignore them.
+     */
+    static Set<Class> alternativeTypes = ImmutableSet.of(
             Java8Parser.TypeDeclarationContext.class,
             Java8Parser.ClassDeclarationContext.class,
             Java8Parser.ClassBodyContext.class,
@@ -52,6 +57,9 @@ public final class AstNodeTypeDeriver {
             Java8Parser.ClassModifierContext.class,
             Java8Parser.ClassBodyDeclarationContext.class);
 
+    /**
+     * There are types having just one element: we want to ignore them.
+     */
     static Set<Class> wrappingTypes = ImmutableSet.of(
             Java8Parser.TypeParametersContext.class,
             Java8Parser.TypeParameterListContext.class,
@@ -59,8 +67,6 @@ public final class AstNodeTypeDeriver {
             Java8Parser.InterfaceTypeListContext.class,
             Java8Parser.ClassBodyContext.class,
             Java8Parser.ElementValuePairListContext.class);
-
-
 
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
@@ -77,23 +83,14 @@ public final class AstNodeTypeDeriver {
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
 
-    private static Map<Class, Class> ruleClassesToNodeClasses;
     private static Map<Class, AstNodeType> ruleClassesToNodeTypes;
 
-    private static  <A extends Annotation> A getSingleAnnotation(Field field, Class<A> annotationClass){
-        A[] annotations = field.getAnnotationsByType(annotationClass);
-        if (1 != annotations.length){
-            throw new RuntimeException("Expected one "+annotationClass.getName()+" on field " + field);
-        }
-        return annotations[0];
-    }
-
     private static RelationMapping getRelationMapping(Field field){
-        return getSingleAnnotation(field, RelationMapping.class);
+        return ReflectionUtils.getSingleAnnotation(field, RelationMapping.class);
     }
 
     private static AttributeMapping getAttributeMapping(Field field){
-        return getSingleAnnotation(field, AttributeMapping.class);
+        return ReflectionUtils.getSingleAnnotation(field, AttributeMapping.class);
     }
 
     private static Relation deriveRelation(RelationMapping relationMapping, Field field, Class<? extends ParserRuleContext> ctxClass){
@@ -147,7 +144,6 @@ public final class AstNodeTypeDeriver {
                 for (Method method : ctxClass.getDeclaredMethods()){
                     if (method.getName().equals(methodName) && method.getParameterCount() == 1){
                         Class<?> type = skipWrappingType(method.getReturnType());
-                        System.out.println("FROM "+method.getReturnType()+" TO "+type);
                         Class<?> clazz = findCorrespondingNodeClass(type);
                         if (clazz == null){
                             throw new RuntimeException("No correspondence found for "+type);
@@ -161,7 +157,6 @@ public final class AstNodeTypeDeriver {
                 for (Method method : ctxClass.getDeclaredMethods()){
                     if (method.getName().equals(methodName) && method.getParameterCount() == 0){
                         Class<?> type = skipWrappingType(method.getReturnType());
-                        System.out.println("FROM "+method.getReturnType()+" TO "+type);
                         Class<?> clazz = findCorrespondingNodeClass(type);
                         if (clazz == null){
                             throw new RuntimeException("No correspondence found for "+type);
@@ -213,9 +208,7 @@ public final class AstNodeTypeDeriver {
         if (1 != ruleMappings.length){
             throw new RuntimeException("Expected one RuleMapping on class " + nodeClass);
         }
-        if (ruleClassesToNodeClasses == null) ruleClassesToNodeClasses = new HashMap<>();
         if (ruleClassesToNodeTypes == null) ruleClassesToNodeTypes = new HashMap<>();
-        ruleClassesToNodeClasses.put(ruleMappings[0].rule(), nodeClass);
         ruleClassesToNodeTypes.put(ruleMappings[0].rule(), nodeType);
 
         for (Field field : nodeClass.getDeclaredFields()){
@@ -276,9 +269,7 @@ public final class AstNodeTypeDeriver {
     }
 
     static AstNodeType findCorrespondingNodeType(Class ruleContextClass){
-        System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
         AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
-        System.out.println("  node type found is " + nodeType);
         if (nodeType == null){
             throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
         }
@@ -286,9 +277,7 @@ public final class AstNodeTypeDeriver {
     }
 
     private static Class<?> findCorrespondingNodeClass(Class ruleContextClass){
-        System.out.println("  looking for corresponding class for "+ruleContextClass.getSimpleName());
         AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
-        System.out.println("  node type found is " + nodeType);
         if (nodeType == null){
             return ruleClassesHostingTokenToNodeTypes.get(ruleContextClass);
         }
@@ -298,8 +287,8 @@ public final class AstNodeTypeDeriver {
         return nodeType.getNodeClass();
     }
 
-    static Object getTransparent(Object value){
-        if (transparentTypes.contains(value.getClass())){
+    static Object skipAlternativeValues(Object value){
+        if (alternativeTypes.contains(value.getClass())){
             Object node = null;
             for (Method method : value.getClass().getDeclaredMethods()){
                 if (method.getParameterCount() == 0){
@@ -334,20 +323,10 @@ public final class AstNodeTypeDeriver {
                     throw new RuntimeException("No alternative found for the transparent type " + value.getClass());
                 }
             }
-            return getTransparent(node);
+            return skipAlternativeValues(node);
         } else {
             return value;
         }
     }
-
-
-
-
-
-
-
-
-
-
 
 }

@@ -1,26 +1,13 @@
 package com.github.javamodel.ast.reflection;
 
-import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
-import com.github.javamodel.annotations.RuleMapping;
-import com.github.javamodel.ast.common.*;
 import com.github.javamodel.ast.AstNode;
-import com.github.javamodel.ast.filelevel.PackageDeclaration;
-import com.github.javamodel.ast.typedecls.ClassDeclaration;
-import com.github.javamodel.ast.typedecls.ClassElement;
-import com.github.javamodel.ast.typedecls.TypeDeclaration;
-import com.github.javamodel.ast.typedecls.TypeParameter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import lombok.Data;
 import lombok.Getter;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,8 +15,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
-* Created by federico on 21/05/15.
-*/
+ * Created by federico on 21/05/15.
+ */
 @Data
 public class AstNodeType<N extends AstNode> {
 
@@ -40,21 +27,27 @@ public class AstNodeType<N extends AstNode> {
     private String name;
     private Class<N> nodeClass;
 
-    public List<Attribute> getSortedAttributes(){
+    /**
+     * Get the attributes sorted by name.
+     */
+    public List<Attribute> getSortedAttributes() {
         List<Attribute> as = new LinkedList<>();
         as.addAll(attributes);
-        as.sort((a,b)->a.getName().compareTo(b.getName()));
+        as.sort((a, b) -> a.getName().compareTo(b.getName()));
         return as;
     }
 
-    public List<Relation> getSortedRelations(){
+    /**
+     * Get the relations sorted by name.
+     */
+    public List<Relation> getSortedRelations() {
         List<Relation> as = new LinkedList<>();
         as.addAll(relations);
-        as.sort((a,b)->a.getName().compareTo(b.getName()));
+        as.sort((a, b) -> a.getName().compareTo(b.getName()));
         return as;
     }
 
-    AstNodeType(String name, Class<N> nodeClass){
+    AstNodeType(String name, Class<N> nodeClass) {
         this.name = name;
         this.nodeClass = nodeClass;
     }
@@ -66,22 +59,22 @@ public class AstNodeType<N extends AstNode> {
         private List<Attribute> attributes = new ArrayList<>();
         private Class<N> nodeClass;
 
-        public Builder(String name, Class<N> nodeClass){
+        public Builder(String name, Class<N> nodeClass) {
             this.name = name;
             this.nodeClass = nodeClass;
         }
 
-        public Builder addRelation(Relation relation){
+        public Builder addRelation(Relation relation) {
             relations.add(relation);
             return this;
         }
 
-        public Builder addAttribute(Attribute attribute){
+        public Builder addAttribute(Attribute attribute) {
             attributes.add(attribute);
             return this;
         }
 
-        public AstNodeType<N> build(){
+        public AstNodeType<N> build() {
             AstNodeType nodeType = new AstNodeType(name, nodeClass);
             nodeType.relations.addAll(relations);
             nodeType.attributes.addAll(attributes);
@@ -89,138 +82,129 @@ public class AstNodeType<N extends AstNode> {
         }
     }
 
-    public N fromAntlrNode(ParserRuleContext ruleContext, AstNode parentNode){
+    private void debug(String msg) {
+        //System.out.println(msg);
+    }
+
+    private void assignRelation(N node, Field field, ParserRuleContext antlrNode) {
+        RelationMapping relationMapping = ReflectionUtils.getSingleAnnotation(field, RelationMapping.class);
+        try {
+            Method ctxAccessor = AstNodeTypeDeriver.ctxAccessor(field, antlrNode.getClass());
+            Object antlrValue = ctxAccessor.invoke(antlrNode);
+            if (antlrValue == null) return;
+            antlrValue = unwrapValue(antlrValue);
+            if (AstNodeTypeDeriver.isMultipleRelation(field)) {
+                List antlrValueList = (List) antlrValue;
+                List astValueList = new ArrayList<>();
+                for (Object antlrSingleValue : filter(antlrValueList, relationMapping)) {
+                    astValueList.add(antlrToAstRelationValue(antlrSingleValue, node));
+                }
+                ReflectionUtils.assignField(field, node, astValueList);
+            } else {
+                Object astValue = antlrToAstRelationValue(antlrValue, node);
+                ReflectionUtils.assignField(field, node, astValue);
+            }
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException("Because " + nodeClass.getCanonicalName() + " has field " + field.getName() + " we expect " + antlrNode.getClass(), e);
+        }
+    }
+
+    private void assignAttribute(N node, Field field, ParserRuleContext antlrNode) {
+        AttributeMapping attributeMapping = ReflectionUtils.getSingleAnnotation(field, AttributeMapping.class);
+        try {
+            Method ctxAccessor = AstNodeTypeDeriver.ctxAccessor(field, antlrNode.getClass());
+            Object antlrValue = ctxAccessor.invoke(antlrNode);
+            if (antlrValue == null) return;
+            if (AstNodeTypeDeriver.isMultipleAttribute(field)) {
+                List antlrValueList = (List) antlrValue;
+                List astValueList = new ArrayList<>();
+                for (Object antlrSingleValue : filter(antlrValueList, attributeMapping)) {
+                    astValueList.add(antlrToAstAttributeValue(antlrSingleValue, node));
+                }
+                ReflectionUtils.assignField(field, node, astValueList);
+            } else {
+                Object astValue = antlrToAstAttributeValue(antlrValue, node);
+                ReflectionUtils.assignField(field, node, astValue);
+            }
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException("Because " + nodeClass.getCanonicalName() + " has field " + field.getName() + " we expect " + antlrNode.getClass(), e);
+        }
+    }
+
+    /**
+     * Given an Antlr node it derives an AstNode of type N.
+     */
+    public N fromAntlrNode(ParserRuleContext antlrNode, AstNode astParentNode) {
         try {
             N node = null;
-            if (parentNode == null) {
+
+            debug("\n=== AntlrNode " + antlrNode.getClass().getSimpleName() + " ===\n");
+
+            // Instantiation
+            if (astParentNode == null) {
+                // This should be the case only for the CompilationUnit which has no parent
                 node = nodeClass.newInstance();
             } else {
-                node = nodeClass.getConstructor(AstNode.class).newInstance(parentNode);
+                node = nodeClass.getConstructor(AstNode.class).newInstance(astParentNode);
             }
-            System.out.println("\n=== AntlrNode "+ruleContext.getClass().getSimpleName()+" ===\n");
-            for (Field field : nodeClass.getDeclaredFields()){
-                if (field.isAnnotationPresent(RelationMapping.class)){
-                    RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
-                    if (relationMappings.length != 1) throw new RuntimeException();
-                    System.out.println("Considering field " + field.getName());
-                    try {
-                        Method ctxAccessor = AstNodeTypeDeriver.ctxAccessor(field, ruleContext.getClass());
-                        Object value = ctxAccessor.invoke(ruleContext);
-                        System.out.println("  Value obtained is " + value);
-                        if (AstNodeTypeDeriver.isMultipleRelation(field)){
-                            System.out.println("  multiple relation");
-                            if (value != null) {
-                                value = unwrapValue(value);
-                                List valueAsList = (List) value;
-                                List convertedValues = new ArrayList<>();
-                                for (Object originalValueElement : filter(valueAsList, relationMappings[0])){
-                                    // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
-                                    System.out.println("  value element "+originalValueElement.getClass());
-                                    convertedValues.add(convertValue(originalValueElement, node));
-                                }
-                                field.setAccessible(true);
-                                field.set(node, convertedValues);
-                                field.setAccessible(false);
-                            }
-                        } else {
-                            System.out.println("  single relation");
-                            if (value != null) {
-                                Object convertedValue = convertValue(value, node);
-                                field.setAccessible(true);
-                                field.set(node, convertedValue);
-                                field.setAccessible(false);
-                            }
-                        }
-                    } catch (InvocationTargetException e){
-                        throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass(), e);
-                    }
-                } else if (field.isAnnotationPresent(AttributeMapping.class)){
-                    AttributeMapping[] attributeMappings = field.getAnnotationsByType(AttributeMapping.class);
-                    if (attributeMappings.length != 1) throw new RuntimeException();
-                    System.out.println("Considering field " + field.getName());
-                    try {
-                        Method ctxAccessor = AstNodeTypeDeriver.ctxAccessor(field, ruleContext.getClass());
-                        Object value = ctxAccessor.invoke(ruleContext);
-                        System.out.println("  Value obtained is " + value);
-                        if (AstNodeTypeDeriver.isMultipleAttribute(field)){
-                            System.out.println("  multiple attribute");
-                            if (value != null) {
-                                List valueAsList = (List) value;
-                                List convertedValues = new ArrayList<>();
-                                for (Object originalValueElement : filter(valueAsList, attributeMappings[0])){
-                                    // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
-                                    System.out.println("  value element "+originalValueElement.getClass());
-                                    convertedValues.add(convertAttributeValue(originalValueElement, node));
-                                }
-                                field.setAccessible(true);
-                                field.set(node, convertedValues);
-                                field.setAccessible(false);
-                            }
-                        } else {
-                            System.out.println("  single attribute");
-                            if (value != null) {
-                                Object convertedValue = convertAttributeValue(value, node);
-                                field.setAccessible(true);
-                                field.set(node, convertedValue);
-                                field.setAccessible(false);
-                            }
-                        }
-                    } catch (InvocationTargetException e){
-                        throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass(), e);
-                    }
 
+            for (Field field : nodeClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(RelationMapping.class)) {
+                    assignRelation(node, field, antlrNode);
+                } else if (field.isAnnotationPresent(AttributeMapping.class)) {
+                    assignAttribute(node, field, antlrNode);
                 }
             }
             return node;
-        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e){
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Object convertValue(Object originalValueElement, AstNode node){
-        Object valueElement = AstNodeTypeDeriver.getTransparent(originalValueElement);
-        if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
-            Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
-            System.out.println("  converted to enum type " + correspondingType);
-            ParserRuleContext ctx = (ParserRuleContext) originalValueElement;
+    private Object antlrToAstRelationValue(Object antlrValue, AstNode astNode) {
+        antlrValue = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
+        if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.values().contains(antlrValue.getClass())) {
+            Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(antlrValue.getClass());
+            debug("  converted to enum type " + correspondingType);
+            ParserRuleContext ctx = (ParserRuleContext) antlrValue;
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-            System.out.println("  converted to enum value " + convertedValue);
+            debug("  converted to enum value " + convertedValue);
             return convertedValue;
         } else {
-            AstNodeType elementNodeType = AstNodeTypeDeriver.findCorrespondingNodeType(valueElement.getClass());
-            AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
-            System.out.println("  converted to " + correspondingElementValue);
+            AstNodeType elementNodeType = AstNodeTypeDeriver.findCorrespondingNodeType(antlrValue.getClass());
+            AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) antlrValue, astNode);
+            debug("  converted to " + correspondingElementValue);
             return correspondingElementValue;
         }
     }
 
-    private Object convertAttributeValue(Object originalValueElement, AstNode node){
-        Object valueElement = AstNodeTypeDeriver.getTransparent(originalValueElement);
+    private Object antlrToAstAttributeValue(Object antlrValue, AstNode astNode) {
+        Object valueElement = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
         if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
-            Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
-            System.out.println("  converted to enum type " + correspondingType);
-            ParserRuleContext ctx = (ParserRuleContext) originalValueElement;
+            Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(antlrValue.getClass());
+            debug("  converted to enum type " + correspondingType);
+            ParserRuleContext ctx = (ParserRuleContext) antlrValue;
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-            System.out.println("  converted to enum value " + convertedValue);
+            debug("  converted to enum value " + convertedValue);
             return convertedValue;
         } else if (TerminalNode.class.isAssignableFrom(valueElement.getClass())) {
-            TerminalNode terminalNode = (TerminalNode)valueElement;
+            TerminalNode terminalNode = (TerminalNode) valueElement;
             return terminalNode.getText();
         } else {
             throw new RuntimeException();
         }
     }
 
-    private Object unwrapValue(Object value){
-        if (AstNodeTypeDeriver.wrappingTypes.contains(value.getClass())){
+    private Object unwrapValue(Object value) {
+        if (AstNodeTypeDeriver.wrappingTypes.contains(value.getClass())) {
             Class type = value.getClass();
             Set<Method> methods = new HashSet<>();
-            for (Method method : type.getDeclaredMethods()){
-                if (method.getParameterCount() == 0 && !method.getName().equals("getRuleIndex")){
+            for (Method method : type.getDeclaredMethods()) {
+                if (method.getParameterCount() == 0 && !method.getName().equals("getRuleIndex")) {
                     methods.add(method);
                 }
             }
-            if (methods.size() == 1){
+            if (methods.size() == 1) {
                 Method m = methods.iterator().next();
                 try {
                     if (List.class.equals(m.getReturnType())) {
@@ -229,7 +213,7 @@ public class AstNodeType<N extends AstNode> {
                     } else {
                         return unwrapValue(m.invoke(value));
                     }
-                } catch (IllegalAccessException | InvocationTargetException |NoSuchMethodException e){
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
             } else {
@@ -239,17 +223,17 @@ public class AstNodeType<N extends AstNode> {
     }
 
     private Iterable<? extends Object> filter(List<Object> valueAsList, RelationMapping relationMapping) {
-        if (relationMapping.filter().isEmpty()){
+        if (relationMapping.filter().isEmpty()) {
             return valueAsList;
         } else {
             boolean negated = relationMapping.filter().startsWith("!");
             final String methodName = negated ? relationMapping.filter().substring(1) : relationMapping.filter();
-            return valueAsList.stream().filter((value)->{
+            return valueAsList.stream().filter((value) -> {
                 try {
                     Method method = value.getClass().getDeclaredMethod(methodName);
                     boolean isNull = null == method.invoke(value);
                     return isNull == negated;
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e){
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }).collect(Collectors.toList());
@@ -257,17 +241,17 @@ public class AstNodeType<N extends AstNode> {
     }
 
     private Iterable<? extends Object> filter(List<Object> valueAsList, AttributeMapping attributeMapping) {
-        if (attributeMapping.filter().isEmpty()){
+        if (attributeMapping.filter().isEmpty()) {
             return valueAsList;
         } else {
             boolean negated = attributeMapping.filter().startsWith("!");
             final String methodName = negated ? attributeMapping.filter().substring(1) : attributeMapping.filter();
-            return valueAsList.stream().filter((value)->{
+            return valueAsList.stream().filter((value) -> {
                 try {
                     Method method = value.getClass().getDeclaredMethod(methodName);
                     boolean isNull = null == method.invoke(value);
                     return isNull == negated;
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e){
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }).collect(Collectors.toList());
