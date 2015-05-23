@@ -21,19 +21,15 @@ public class NodeTypeTest
     public void parseClassWithFields()
     {
         assertEquals("root : CompilationUnit\n" +
-                "  typeDeclaration : NormalClassDeclaration { Identifier=A }\n" +
-                "    classElements : FieldDeclaration\n" +
-                "      variableDeclaratorList : VariableDeclarator\n" +
-                "        id : VariableDeclaratorId { Identifier=a }\n" +
-                "      variableDeclaratorList : VariableDeclarator\n" +
-                "        id : VariableDeclaratorId { Identifier=b }\n" +
-                "      type : IntegralType { value=int }\n" +
-                "    classElements : FieldDeclaration\n" +
-                "      variableDeclaratorList : VariableDeclarator\n" +
-                "        id : VariableDeclaratorId { Identifier=i }\n" +
-                "      variableDeclaratorList : VariableDeclarator\n" +
-                "        id : VariableDeclaratorId { Identifier=j }\n" +
-                "      type : IntegralType { value=long }", toTreeString("class A { int a, b; long i, j;}"));
+                "  topTypes : ClassDeclaration { modifiers=[] name=[A] }\n" +
+                "    elements : FieldDeclaration { modifiers=[] }\n" +
+                "      type : PrimitiveTypeRef { primitiveType=[INT] }\n" +
+                "      variables : VariableDeclarator { name=[a] }\n" +
+                "      variables : VariableDeclarator { name=[b] }\n" +
+                "    elements : FieldDeclaration { modifiers=[] }\n" +
+                "      type : PrimitiveTypeRef { primitiveType=[LONG] }\n" +
+                "      variables : VariableDeclarator { name=[i] }\n" +
+                "      variables : VariableDeclarator { name=[j] }", toTreeString("class A { int a, b; long i, j;}"));
     }
 
     @Test
