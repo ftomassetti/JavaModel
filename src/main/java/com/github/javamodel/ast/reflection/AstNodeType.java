@@ -1,5 +1,6 @@
 package com.github.javamodel.ast.reflection;
 
+import com.github.javamodel.Java8Parser;
 import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.ast.AstNode;
@@ -136,12 +137,12 @@ public class AstNodeType<N extends AstNode> {
      */
     public N fromAntlrNode(ParserRuleContext antlrNode, AstNode astParentNode) {
         try {
-            N node = null;
+            N node;
 
             debug("\n=== AntlrNode " + antlrNode.getClass().getSimpleName() + " ===\n");
 
             // Instantiation
-            if (astParentNode == null) {
+            if (antlrNode instanceof Java8Parser.CompilationUnitContext) {
                 // This should be the case only for the CompilationUnit which has no parent
                 node = nodeClass.newInstance();
             } else {
@@ -161,37 +162,46 @@ public class AstNodeType<N extends AstNode> {
         }
     }
 
-    private Object antlrToAstRelationValue(Object antlrValue, AstNode astNode) {
+    private static Class<? extends Enum> getCorrespondingTypeEnum(Class clazz){
+        if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.keySet().contains(clazz)){
+            return AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(clazz);
+        }
+        if (clazz.getSuperclass() == null){
+            return null;
+        }
+        return getCorrespondingTypeEnum(clazz.getSuperclass());
+    }
+
+    static boolean hasCorrespondingTypeEnum(Class clazz){
+        return getCorrespondingTypeEnum(clazz) != null;
+    }
+
+    static Object antlrToAstRelationValue(Object antlrValue, AstNode astNode) {
         antlrValue = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
-        if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.values().contains(antlrValue.getClass())) {
-            Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(antlrValue.getClass());
-            debug("  converted to enum type " + correspondingType);
+        if (hasCorrespondingTypeEnum(antlrValue.getClass())) {
+            Class<? extends Enum> correspondingType = getCorrespondingTypeEnum(antlrValue.getClass());
             ParserRuleContext ctx = (ParserRuleContext) antlrValue;
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-            debug("  converted to enum value " + convertedValue);
             return convertedValue;
         } else {
             AstNodeType elementNodeType = AstNodeTypeDeriver.findCorrespondingNodeType(antlrValue.getClass());
             AstNode correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) antlrValue, astNode);
-            debug("  converted to " + correspondingElementValue);
             return correspondingElementValue;
         }
     }
 
-    private Object antlrToAstAttributeValue(Object antlrValue, AstNode astNode) {
+    static Object antlrToAstAttributeValue(Object antlrValue, AstNode astNode) {
         Object valueElement = AstNodeTypeDeriver.skipAlternativeValues(antlrValue);
         if (AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
             Class<? extends Enum> correspondingType = AstNodeTypeDeriver.ruleClassesHostingTokenToNodeTypes.get(antlrValue.getClass());
-            debug("  converted to enum type " + correspondingType);
             ParserRuleContext ctx = (ParserRuleContext) antlrValue;
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
-            debug("  converted to enum value " + convertedValue);
             return convertedValue;
         } else if (TerminalNode.class.isAssignableFrom(valueElement.getClass())) {
             TerminalNode terminalNode = (TerminalNode) valueElement;
             return terminalNode.getText();
         } else {
-            throw new RuntimeException();
+            throw new RuntimeException("ValueElement class "+valueElement.getClass());
         }
     }
 

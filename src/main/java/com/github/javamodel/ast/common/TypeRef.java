@@ -11,12 +11,12 @@ import lombok.Data;
  * Created by federico on 23/05/15.
  */
 @Data
-@RuleMapping(rule= Java8Parser.ClassTypeContext.class)
-public class ClassTypeRef extends TypeRef {
+@RuleMapping(rule= Java8Parser.UnannTypeContext.class)
+public class TypeRef extends AstNode {
 
-    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(ClassTypeRef.class);
+    public static final AstNodeType NODE_TYPE = AstNodeTypeDeriver.deriveFromNodeClass(TypeRef.class);
 
-    protected ClassTypeRef(AstNode parent) {
-        super(NODE_TYPE, parent);
+    protected TypeRef(AstNodeType nodeType, AstNode parent) {
+        super(nodeType, parent);
     }
 }

@@ -7,10 +7,7 @@ import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.common.*;
 import com.github.javamodel.ast.filelevel.PackageDeclaration;
-import com.github.javamodel.ast.typedecls.ClassDeclaration;
-import com.github.javamodel.ast.typedecls.ClassElement;
-import com.github.javamodel.ast.typedecls.TypeDeclaration;
-import com.github.javamodel.ast.typedecls.TypeParameter;
+import com.github.javamodel.ast.typedecls.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -21,6 +18,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Function;
 
 
 /**
@@ -37,7 +35,8 @@ public final class AstNodeTypeDeriver {
      * like an enum.
      */
     static Map<Class, Class<? extends Enum>> ruleClassesHostingTokenToNodeTypes = ImmutableMap.of(
-            Java8Parser.ClassModifierContext.class, Modifier.class
+            Java8Parser.ClassModifierContext.class, Modifier.class,
+            Java8Parser.IntegralTypeContext.class, PrimitiveType.class
     );
 
     /**
@@ -66,7 +65,8 @@ public final class AstNodeTypeDeriver {
             Java8Parser.SuperinterfacesContext.class,
             Java8Parser.InterfaceTypeListContext.class,
             Java8Parser.ClassBodyContext.class,
-            Java8Parser.ElementValuePairListContext.class);
+            Java8Parser.ElementValuePairListContext.class,
+            Java8Parser.VariableDeclaratorListContext.class);
 
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
@@ -79,6 +79,9 @@ public final class AstNodeTypeDeriver {
             MarkerAnnotationUsage.NODE_TYPE,
             SingleElementAnnotationUsage.NODE_TYPE,
             MultipleElementsAnnotationUsage.NODE_TYPE,
+            PrimitiveTypeRef.NODE_TYPE,
+            VariableDeclarator.NODE_TYPE,
+            FieldDeclaration.NODE_TYPE,
             ClassElement.NODE_TYPE,
             TypeDeclaration.NODE_TYPE, ClassDeclaration.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE, PackageDeclaration.NODE_TYPE);
@@ -208,7 +211,10 @@ public final class AstNodeTypeDeriver {
         if (1 != ruleMappings.length){
             throw new RuntimeException("Expected one RuleMapping on class " + nodeClass);
         }
-        if (ruleClassesToNodeTypes == null) ruleClassesToNodeTypes = new HashMap<>();
+        if (ruleClassesToNodeTypes == null) {
+            ruleClassesToNodeTypes = new HashMap<>();
+            ruleClassesToNodeTypes.put(Java8Parser.IntegralTypeContext.class, PrimitiveTypeRef.NODE_TYPE);
+        }
         ruleClassesToNodeTypes.put(ruleMappings[0].rule(), nodeType);
 
         for (Field field : nodeClass.getDeclaredFields()){
@@ -271,7 +277,10 @@ public final class AstNodeTypeDeriver {
     static AstNodeType findCorrespondingNodeType(Class ruleContextClass){
         AstNodeType nodeType = ruleClassesToNodeTypes.get(ruleContextClass);
         if (nodeType == null){
-            throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
+            if (ruleContextClass.getSuperclass() == null){
+                throw new RuntimeException("no corresponding nodeType for "+ruleContextClass);
+            }
+            return findCorrespondingNodeType(ruleContextClass.getSuperclass());
         }
         return nodeType;
     }

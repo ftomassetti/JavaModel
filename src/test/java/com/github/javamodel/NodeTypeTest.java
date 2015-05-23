@@ -17,7 +17,7 @@ public class NodeTypeTest
         return NodeTree.treeString(root, "root", 0).trim();
     }
 
-    /*@Test
+    @Test
     public void parseClassWithFields()
     {
         assertEquals("root : CompilationUnit\n" +
@@ -34,7 +34,7 @@ public class NodeTypeTest
                 "      variableDeclaratorList : VariableDeclarator\n" +
                 "        id : VariableDeclaratorId { Identifier=j }\n" +
                 "      type : IntegralType { value=long }", toTreeString("class A { int a, b; long i, j;}"));
-    }*/
+    }
 
     @Test
     public void parseInternalClasses()
