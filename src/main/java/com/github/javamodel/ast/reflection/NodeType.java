@@ -1,6 +1,7 @@
 package com.github.javamodel.ast.reflection;
 
 import com.github.javamodel.Java8Parser;
+import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.common.AnnotationUsageNode;
@@ -81,8 +82,16 @@ public class NodeType<N extends Node> {
     
     private List<String> ctxAccessorName(Field field, RuleContext ruleContext){
         RelationMapping[] relationMappings = field.getAnnotationsByType(RelationMapping.class);
-        if (relationMappings.length != 1) throw new RuntimeException();
-        if (relationMappings[0].ctxAccessorName().isEmpty()) {
+        AttributeMapping[] attributeMappings = field.getAnnotationsByType(AttributeMapping.class);
+        String accessorName = "";
+        if (relationMappings.length > 0) {
+            if (relationMappings.length != 1) throw new RuntimeException();
+            accessorName = relationMappings[0].ctxAccessorName();
+        } else if (attributeMappings.length > 0) {
+            if (attributeMappings.length != 1) throw new RuntimeException();
+            accessorName = attributeMappings[0].ctxAccessorName();
+        } else throw new RuntimeException();
+        if (accessorName.isEmpty()) {
             if (isMultipleRelation(field) && field.getName().endsWith("s")){
                 String singleName = field.getName().substring(0, field.getName().length() - 1);
                 String singleNameLowercase = singleName.substring(0, 1).toUpperCase() + singleName.substring(1);
@@ -91,7 +100,7 @@ public class NodeType<N extends Node> {
                 return ImmutableList.of(field.getName());
             }
         } else {
-            return ImmutableList.of(relationMappings[0].ctxAccessorName());
+            return ImmutableList.of(accessorName);
         }
     }
 
@@ -108,6 +117,10 @@ public class NodeType<N extends Node> {
     }
     
     private boolean isMultipleRelation(Field field){
+        return List.class.isAssignableFrom(field.getType());
+    }
+
+    private boolean isMultipleAttribute(Field field){
         return List.class.isAssignableFrom(field.getType());
     }
     
@@ -172,14 +185,28 @@ public class NodeType<N extends Node> {
             Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
             System.out.println("  converted to enum value " + convertedValue);
             return convertedValue;
-        } else if (TerminalNode.class.isAssignableFrom(valueElement.getClass())) {
-            TerminalNode terminalNode = (TerminalNode)valueElement;
-            return terminalNode.getText();
         } else {
             NodeType elementNodeType = findCorrespondingNodeType(valueElement.getClass());
             Node correspondingElementValue = elementNodeType.fromAntlrNode((ParserRuleContext) valueElement, node);
             System.out.println("  converted to " + correspondingElementValue);
             return correspondingElementValue;
+        }
+    }
+
+    private Object convertAttributeValue(Object originalValueElement, Node node){
+        Object valueElement = getTransparent(originalValueElement);
+        if (ruleClassesHostingTokenToNodeTypes.values().contains(valueElement.getClass())) {
+            Class<? extends Enum> correspondingType = ruleClassesHostingTokenToNodeTypes.get(originalValueElement.getClass());
+            System.out.println("  converted to enum type " + correspondingType);
+            ParserRuleContext ctx = (ParserRuleContext) originalValueElement;
+            Object convertedValue = Enum.valueOf(correspondingType, ctx.getStart().getText().toUpperCase());
+            System.out.println("  converted to enum value " + convertedValue);
+            return convertedValue;
+        } else if (TerminalNode.class.isAssignableFrom(valueElement.getClass())) {
+            TerminalNode terminalNode = (TerminalNode)valueElement;
+            return terminalNode.getText();
+        } else {
+            throw new RuntimeException();
         }
     }
     
@@ -227,6 +254,41 @@ public class NodeType<N extends Node> {
                     } catch (InvocationTargetException e){
                         throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass(), e);
                     }
+                } else if (field.isAnnotationPresent(AttributeMapping.class)){
+                        AttributeMapping[] attributeMappings = field.getAnnotationsByType(AttributeMapping.class);
+                        if (attributeMappings.length != 1) throw new RuntimeException();
+                        System.out.println("Considering field " + field.getName());
+                        try {
+                            Method ctxAccessor = ctxAccessor(field, ruleContext);
+                            Object value = ctxAccessor.invoke(ruleContext);
+                            System.out.println("  Value obtained is " + value);
+                            if (isMultipleAttribute(field)){
+                                System.out.println("  multiple attribute");
+                                if (value != null) {
+                                    List valueAsList = (List) value;
+                                    List convertedValues = new ArrayList<>();
+                                    for (Object originalValueElement : filter(valueAsList, attributeMappings[0])){
+                                        // TODO if the class is "transparent" we should get the "concrete" one and use that one to find the element type
+                                        System.out.println("  value element "+originalValueElement.getClass());
+                                        convertedValues.add(convertAttributeValue(originalValueElement, node));
+                                    }
+                                    field.setAccessible(true);
+                                    field.set(node, convertedValues);
+                                    field.setAccessible(false);
+                                }
+                            } else {
+                                System.out.println("  single attribute");
+                                if (value != null) {
+                                    Object convertedValue = convertAttributeValue(value, node);
+                                    field.setAccessible(true);
+                                    field.set(node, convertedValue);
+                                    field.setAccessible(false);
+                                }
+                            }
+                        } catch (InvocationTargetException e){
+                            throw new RuntimeException("Because "+nodeClass.getCanonicalName()+" has field "+field.getName()+" we expect "+ruleContext.getClass(), e);
+                        }
+
                 }
             }
             return node;
@@ -241,6 +303,24 @@ public class NodeType<N extends Node> {
         } else {
             boolean negated = relationMapping.filter().startsWith("!");
             final String methodName = negated ? relationMapping.filter().substring(1) : relationMapping.filter();
+            return valueAsList.stream().filter((value)->{
+                try {
+                    Method method = value.getClass().getDeclaredMethod(methodName);
+                    boolean isNull = null == method.invoke(value);
+                    return isNull == negated;
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e){
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+        }
+    }
+
+    private Iterable<? extends Object> filter(List<Object> valueAsList, AttributeMapping attributeMapping) {
+        if (attributeMapping.filter().isEmpty()){
+            return valueAsList;
+        } else {
+            boolean negated = attributeMapping.filter().startsWith("!");
+            final String methodName = negated ? attributeMapping.filter().substring(1) : attributeMapping.filter();
             return valueAsList.stream().filter((value)->{
                 try {
                     Method method = value.getClass().getDeclaredMethod(methodName);

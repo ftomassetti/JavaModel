@@ -1,6 +1,7 @@
 package com.github.javamodel.ast.typedecls;
 
 import com.github.javamodel.Java8Parser;
+import com.github.javamodel.annotations.AttributeMapping;
 import com.github.javamodel.annotations.RelationMapping;
 import com.github.javamodel.annotations.RuleMapping;
 import com.github.javamodel.ast.common.AnnotationUsageNode;
@@ -20,7 +21,7 @@ public class ClassDeclaration extends TypeDeclaration {
 
     @RelationMapping(ctxAccessorName= "classModifier", filter = "annotation")
     private List<AnnotationUsageNode> annotations;
-    @RelationMapping(ctxAccessorName= "classModifier", filter = "!annotation")
+    @AttributeMapping(ctxAccessorName= "classModifier", filter = "!annotation")
     private List<Modifier> modifiers;
 
     public static final NodeType NODE_TYPE = NodeType.deriveFromNodeClass(ClassDeclaration.class);
