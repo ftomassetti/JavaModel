@@ -33,6 +33,14 @@ public class NodeTypeDerivationTest
     }
 
     @Test
+    public void forAnnotationUsageNode()
+    {
+        assertEquals(new NodeType.Builder("AnnotationUsageNode", AnnotationUsageNode.class)
+                .addAttribute(Attribute.single("typeName", String.class))
+                .build(), AnnotationUsageNode.NODE_TYPE);
+    }
+
+    @Test
     public void forClassDeclaration()
     {
         assertEquals(new NodeType.Builder("ClassDeclaration", ClassDeclaration.class)
