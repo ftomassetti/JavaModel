@@ -1,5 +1,8 @@
 package com.github.javamodel;
 
+import com.github.javamodel.ast.Node;
+import com.github.javamodel.parsing.NodeTree;
+import com.github.javamodel.parsing.ParserCli;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -10,12 +13,11 @@ import static org.junit.Assert.*;
 public class NodeTypeTest
 {
     private String toTreeString(String code){
-        //NodeOld root = new ParserCli().parse(code);
-        //return NodeTree.treeString(root, "root", 0).trim();
-        return null;
+        Node root = new ParserCli().parse(code);
+        return NodeTree.treeString(root, "root", 0).trim();
     }
 
-    @Test
+    /*@Test
     public void parseClassWithFields()
     {
         assertEquals("root : CompilationUnit\n" +
@@ -32,14 +34,21 @@ public class NodeTypeTest
                 "      variableDeclaratorList : VariableDeclarator\n" +
                 "        id : VariableDeclaratorId { Identifier=j }\n" +
                 "      type : IntegralType { value=long }", toTreeString("class A { int a, b; long i, j;}"));
-    }
+    }*/
 
     @Test
     public void parseInternalClasses()
     {
         assertEquals("root : CompilationUnit\n" +
-                "  typeDeclaration : NormalClassDeclaration { Identifier=A }\n" +
-                "    classElements : NormalClassDeclaration { Identifier=B }\n" +
-                "      classElements : NormalClassDeclaration { Identifier=C }", toTreeString("class A { class B {class C {} } }"));
+                "  topTypes : ClassDeclaration { modifiers=[] name=[A] }\n" +
+                "    elements : ClassDeclaration { modifiers=[] name=[B] }\n" +
+                "      elements : ClassDeclaration { modifiers=[] name=[C] }", toTreeString("class A { class B {class C {} } }"));
+    }
+
+    @Test
+    public void parseSimplestClass()
+    {
+        assertEquals("root : CompilationUnit\n" +
+                "  topTypes : ClassDeclaration { modifiers=[] name=[A] }", toTreeString("class A { }"));
     }
 }

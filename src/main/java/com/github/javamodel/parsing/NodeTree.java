@@ -1,20 +1,27 @@
 package com.github.javamodel.parsing;
 
+import com.github.javamodel.ast.Node;
+import com.github.javamodel.ast.reflection.Attribute;
+import com.github.javamodel.ast.reflection.Relation;
+
+import java.util.List;
+import java.util.Set;
+
 /**
  * Created by federico on 21/05/15.
  */
 public class NodeTree {
 
-    /*public static void printTree(Node node, String relationName, int indentation, StringBuffer stringBuffer) {
+    public static void printTree(Node node, String relationName, int indentation, StringBuffer stringBuffer) {
         for (int j = 0; j < indentation; j++) stringBuffer.append("  ");
-        stringBuffer.append(relationName + " : " +node.getNodeType().getName());
+        stringBuffer.append(relationName + " : " +node.nodeType().getName());
         boolean attributes = false;
-        for (Attribute attribute : node.getNodeType().getAttributes()){
+        for (Attribute attribute : (List<Attribute>)node.nodeType().getSortedAttributes()){
             if (!attributes){
                 attributes = true;
                 stringBuffer.append(" {");
             }
-            stringBuffer.append(" " + attribute.getName() + "=" + node.getSingleValue(attribute));
+            stringBuffer.append(" " + attribute.getName() + "=" + attribute.get(node));
         }
         if (attributes) {
             stringBuffer.append(" }");
@@ -22,7 +29,7 @@ public class NodeTree {
         } else {
             stringBuffer.append("\n");
         }
-        for (Relation relation : node.getNodeType().getRelations()){
+        for (Relation relation : (List<Relation>)node.nodeType().getSortedRelations()){
             for (Node child : node.getChildren(relation)) {
                 printTree(child, relation.getName(), indentation + 1, stringBuffer);
             }
@@ -33,5 +40,5 @@ public class NodeTree {
         StringBuffer sb = new StringBuffer();
         printTree(node, relationName, indentation, sb);
         return sb.toString();
-    }*/
+    }
 }

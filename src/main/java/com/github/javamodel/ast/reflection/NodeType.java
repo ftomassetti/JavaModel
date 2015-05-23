@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.Data;
+import lombok.Getter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -31,11 +32,27 @@ import java.util.stream.Collectors;
 */
 @Data
 public class NodeType<N extends Node> {
-    
+
+    @Getter
     private Set<Relation> relations = new HashSet<>();
+    @Getter
     private Set<Attribute> attributes = new HashSet<>();
     private String name;
     private Class<N> nodeClass;
+
+    public List<Attribute> getSortedAttributes(){
+        List<Attribute> as = new LinkedList<>();
+        as.addAll(attributes);
+        as.sort((a,b)->a.getName().compareTo(b.getName()));
+        return as;
+    }
+
+    public List<Relation> getSortedRelations(){
+        List<Relation> as = new LinkedList<>();
+        as.addAll(relations);
+        as.sort((a,b)->a.getName().compareTo(b.getName()));
+        return as;
+    }
 
     private static Map<Class, Class<? extends Enum>> ruleClassesHostingTokenToNodeTypes = ImmutableMap.of(
             Java8Parser.ClassModifierContext.class, Modifier.class
@@ -379,6 +396,33 @@ public class NodeType<N extends Node> {
             throw new RuntimeException();
         }
     }
+
+    private Object unwrapValue(Object value){
+        if (wrappingTypes.contains(value.getClass())){
+            Class type = value.getClass();
+            Set<Method> methods = new HashSet<>();
+            for (Method method : type.getDeclaredMethods()){
+                if (method.getParameterCount() == 0 && !method.getName().equals("getRuleIndex")){
+                    methods.add(method);
+                }
+            }
+            if (methods.size() == 1){
+                Method m = methods.iterator().next();
+                try {
+                    if (List.class.equals(m.getReturnType())) {
+                        m = type.getDeclaredMethod(m.getName());
+                        return unwrapValue(m.invoke(value));
+                    } else {
+                        return unwrapValue(m.invoke(value));
+                    }
+                } catch (IllegalAccessException | InvocationTargetException |NoSuchMethodException e){
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new RuntimeException("skipWrappingType " + type.getName() + ", looking for methods " + methods);
+            }
+        } else return value;
+    }
     
     public N fromAntlrNode(ParserRuleContext ruleContext, Node parentNode){
         try {
@@ -401,6 +445,7 @@ public class NodeType<N extends Node> {
                         if (isMultipleRelation(field)){
                             System.out.println("  multiple relation");
                             if (value != null) {
+                                value = unwrapValue(value);
                                 List valueAsList = (List) value;
                                 List convertedValues = new ArrayList<>();
                                 for (Object originalValueElement : filter(valueAsList, relationMappings[0])){
@@ -501,6 +546,14 @@ public class NodeType<N extends Node> {
                 }
             }).collect(Collectors.toList());
         }
+    }
+
+    public Class<N> getNodeClass() {
+        return nodeClass;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public static class Builder<N extends Node> {

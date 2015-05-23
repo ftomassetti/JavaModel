@@ -27,7 +27,7 @@ public class ClassDeclaration extends TypeDeclaration {
     @AttributeMapping(ctxAccessorName= "classModifier", filter = "!annotation")
     private List<Modifier> modifiers;
 
-    @AttributeMapping(ctxAccessorName = "identifier")
+    @AttributeMapping(ctxAccessorName = "Identifier")
     private String name;
 
     @RelationMapping()

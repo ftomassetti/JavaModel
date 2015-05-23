@@ -20,7 +20,7 @@ public class CompilationUnit extends Node {
     private PackageDeclaration packageDeclaration;
 
     @RelationMapping(ctxAccessorName = "typeDeclaration")
-    private List<TypeDeclaration> topTypesDeclarations;
+    private List<TypeDeclaration> topTypes;
 
     public CompilationUnit() {
         super(NODE_TYPE, null);
