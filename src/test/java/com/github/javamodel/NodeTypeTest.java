@@ -35,7 +35,9 @@ public class NodeTypeTest
     @Test
     public void parseClassWithExtendsClause()
     {
-        assertEquals("", toTreeString("class A extends B { }"));
+        assertEquals("root : CompilationUnit\n" +
+                "  topTypes : ClassDeclaration { modifiers=[] name=[A] }\n" +
+                "    superclass : ClassTypeRef { name=[B] }", toTreeString("class A extends B { }"));
     }
 
     @Test

@@ -65,16 +65,18 @@ public final class AstNodeTypeDeriver {
             Java8Parser.InterfaceTypeListContext.class,
             Java8Parser.ClassBodyContext.class,
             Java8Parser.ElementValuePairListContext.class,
-            Java8Parser.VariableDeclaratorListContext.class);
+            Java8Parser.VariableDeclaratorListContext.class,
+            Java8Parser.TypeArgumentContext.class,
+            Java8Parser.TypeArgumentListContext.class);
 
     // This force the classes to be loaded
     private static Set<Object> nodeClasses = ImmutableSet.of(
             TypeParameter.NODE_TYPE,
-            ClassTypeRef.NODE_TYPE,
             InterfaceTypeRef.NODE_TYPE,
             AnnotationValuePair.NODE_TYPE,
             AnnotationValue.NODE_TYPE,
             AnnotationUsageNode.NODE_TYPE,
+            ClassTypeRef.NODE_TYPE,
             MarkerAnnotationUsage.NODE_TYPE,
             SingleElementAnnotationUsage.NODE_TYPE,
             MultipleElementsAnnotationUsage.NODE_TYPE,
