@@ -11,4 +11,8 @@ public class ${name?cap_first} extends AstNode {
     </#if>
 
 </#list>
+
+   public static ${name?cap_first} fromAntlrNode(Java8Parser.${antlrNodeClass?cap_first} antlrNode){
+
+   }
 }

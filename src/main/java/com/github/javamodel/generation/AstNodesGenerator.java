@@ -8,6 +8,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.antlr.runtime.*;
 import org.antlr.runtime.tree.CommonTree;
+import org.antlr.runtime.tree.Tree;
 import org.antlr.v4.parse.*;
 import org.antlr.v4.tool.ast.GrammarAST;
 
@@ -71,16 +72,19 @@ public class AstNodesGenerator {
         }
     }
 
-    private static List<String> interestingNames = ImmutableList.of("compilationUnit", "packageDeclaration");
+    private static List<String> interestingNames = ImmutableList.of("floatingPointType");
+    //"compilationUnit", "packageDeclaration");
 
     public static void processNonTerminal(GrammarAST nonTerminalTree) throws IOException, TemplateException {
         String name = nonTerminalTree.getChild(0).getText();
         if (interestingNames.contains(name)){
             System.out.println("Rule found: " + nonTerminalTree.getChild(0));
-            printTree(nonTerminalTree, 0);
+            //printTree(nonTerminalTree, 0);
             boolean isAlternative = nonTerminalTree.getChild(1).getChildCount() > 1;
             boolean isSequence = !isAlternative;
-            if (isSequence){
+            if (isEnum(nonTerminalTree)) {
+                processEnum(nonTerminalTree);
+            } else if (isSequence){
                 processSequence(nonTerminalTree);
             }
             //System.out.println("  sequence? "+isSequence);
@@ -88,29 +92,102 @@ public class AstNodesGenerator {
         }
     }
 
+    private static String stripQuotes(String s){
+        return s.substring(1, s.length()-1);
+    }
+
+    private static void processEnum(GrammarAST tree) throws IOException, TemplateException {
+        System.out.println("Generating enum");
+        List<Map<String, Object>> values = new ArrayList<>();
+        for (int i=0;i<tree.getChild(1).getChildCount();i++) {
+            Tree value = tree.getChild(1).getChild(i).getChild(0);
+            values.add(ImmutableMap.of(
+                    "name", stripQuotes(value.getText()),
+                            "literal", stripQuotes(value.getText())
+                    ));
+        }
+        Map<String,Object> data = ImmutableMap.of(
+                "name", ruleName(tree),
+                "antlrNodeClass", ruleName(tree)+"Context",
+                "values", values
+        );
+        Template template = freeMarkerConfiguration.getTemplate("EnumAstNode.ftl");
+        StringWriter sw = new StringWriter();
+        template.process(data, sw);
+        System.out.println(sw.toString());
+    }
+
+    private static int T_BLOCK = 77;
+    private static int T_ALT = 73;
+    private static int T_STRING_LITERAL = 62;
+
+    private static boolean isEnum(GrammarAST tree) {
+        if (tree.getChildCount() != 2) return false;
+        if (tree.getChild(1).getType() != T_BLOCK) return false;
+        if (tree.getChild(1).getChildCount() < 2) return false;
+        for (int i=0;i<tree.getChild(1).getChildCount();i++){
+            Tree child = tree.getChild(1).getChild(i);
+            if (child.getType() != T_ALT) return false;
+            if (child.getChildCount() != 1) return false;
+            if (child.getChild(0).getType() != T_STRING_LITERAL) return false;
+        }
+        return true;
+    }
+
     private static String ruleName(GrammarAST tree){
         return tree.getChild(0).getText();
     }
 
+    private static boolean isSingleElement(GrammarAST tree){
+        return tree.getType() == 77 && tree.getChildCount() == 1 && tree.getChild(0).getType() == 73  && tree.getChild(0).getChildCount() == 1;
+    }
+
+    private static boolean isSingleSequence(GrammarAST tree){
+        return tree.getType() == 77 && tree.getChildCount() == 1 && tree.getChild(0).getType() == 73  && tree.getChild(0).getChildCount() > 1;
+    }
+
     private static String fieldName(GrammarAST tree, boolean multiple){
-        if (tree.getChild(0).getChild(0).getChild(0).getType() == 57){
+        // * 79
+        //   BLOCK 77
+        //     ALT 73
+        //       packageModifier 57
+        if (isSingleElement((GrammarAST)tree.getChild(0)) && tree.getChild(0).getChild(0).getChild(0).getType() == 57){
             String name = tree.getChild(0).getChild(0).getChild(0).getText();
             return multiple ? pluralize(name) : name;
-        } else if (tree.getChild(0).getChild(0).getChild(0).getType() == 46) {
+        // * 79
+        //   BLOCK 77
+        //     ALT 73
+        //       += 46
+        //         topTypes 28
+        //         typeDeclaration 57
+        } else if (isSingleElement((GrammarAST)tree.getChild(0)) && tree.getChild(0).getChild(0).getChild(0).getType() == 46) {
             return tree.getChild(0).getChild(0).getChild(0).getChild(0).getText();
-        } else {
-            throw new RuntimeException("Name for field "+tree.getType());
+        } else if (isSingleSequence((GrammarAST)tree.getChild(0))){
+            // if the sequence is made by two elements and the first one is just a string
+            // like '.' or ',' we are just considering the second element
+            GrammarAST alt = (GrammarAST)tree.getChild(0).getChild(0);
+            if (alt.getChildCount()==2 && alt.getChild(0).getType() == 62){
+                return alt.getChild(1).getText();
+            }
         }
+        throw new RuntimeException("Name for field "+tree.getType());
     }
 
     private static String fieldType(GrammarAST tree){
-        if (tree.getChild(0).getChild(0).getChild(0).getType() == 57){
+        if (isSingleElement((GrammarAST) tree.getChild(0)) && tree.getChild(0).getChild(0).getChild(0).getType() == 57){
             return tree.getChild(0).getChild(0).getChild(0).getText();
-        } else if (tree.getChild(0).getChild(0).getChild(0).getType() == 46) {
+        } else if (isSingleElement((GrammarAST) tree.getChild(0)) && tree.getChild(0).getChild(0).getChild(0).getType() == 46) {
             return tree.getChild(0).getChild(0).getChild(0).getChild(1).getText();
-        } else {
-            throw new RuntimeException();
+        } else if (isSingleSequence((GrammarAST)tree.getChild(0))){
+            // if the sequence is made by two elements and the first one is just a string
+            // like '.' or ',' we are just considering the second element
+            GrammarAST alt = (GrammarAST)tree.getChild(0).getChild(0);
+            if (alt.getChildCount()==2 && alt.getChild(0).getType() == 62){
+                return alt.getChild(1).getText();
+            }
         }
+        throw new RuntimeException();
+
     }
 
     private static String pluralize(String name) {
@@ -135,8 +212,15 @@ public class AstNodesGenerator {
                     "multiple", true
             ));
         } else if (tree.getType() == 66) {
-            System.out.println("EOF FIELD " + tree);
-            return Optional.empty();
+            if (tree.getText().equals("EOF")) {
+                return Optional.empty();
+            } else {
+                return Optional.of(ImmutableMap.of(
+                        "name", tree.getText(),
+                        "type", tree.getText(),
+                        "multiple", false
+                ));
+            }
         } else if (tree.getType() == 62) {
             System.out.println("TERMINAL FIELD " + tree);
             return Optional.empty();
@@ -158,6 +242,7 @@ public class AstNodesGenerator {
 
         Map<String,Object> data = ImmutableMap.of(
                 "name", ruleName(nonTerminalTree),
+                "antlrNodeClass", ruleName(nonTerminalTree)+"Context",
                 "fields", fields
         );
         Template template = freeMarkerConfiguration.getTemplate("AstNode.ftl");
@@ -186,6 +271,8 @@ public class AstNodesGenerator {
     }
 
     private static Configuration freeMarkerConfiguration;
+
+    We should start from the root (CompilationUnit) and look into the other rules as we go.
 
     public static void main(String[] args) throws IOException, RecognitionException, TemplateException {
         freeMarkerConfiguration = new Configuration();
