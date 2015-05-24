@@ -23,26 +23,9 @@ public class AstNodesGenerator {
     private static int T_BLOCK = 77;
     private static int T_ALT = 73;
     private static int T_STRING_LITERAL = 62;
-    //"compilationUnit", "packageDeclaration");
-
-    /*public static void processNonTerminal(GrammarAST nonTerminalTree) throws IOException, TemplateException {
-        String name = nonTerminalTree.getChild(0).getText();
-        if (interestingNames.contains(name)){
-            System.out.println("Rule found: " + nonTerminalTree.getChild(0));
-            //printTree(nonTerminalTree, 0);
-            boolean isAlternative = nonTerminalTree.getChild(1).getChildCount() > 1;
-            boolean isSequence = !isAlternative;
-            if (isEnum(nonTerminalTree)) {
-                processEnum(nonTerminalTree);
-            } else if (isSequence){
-                processSequence(nonTerminalTree);
-            }
-            //System.out.println("  sequence? "+isSequence);
-            //printTree(nonTerminalTree, 0);
-        }
-    }*/
     private static int T_TERMINAL = 66;
     private static int T_NON_TERMINAL = 57;
+    private static int T_ADD_ASSIGN = 46;
     private static Map<String, GrammarAST> rules = new HashMap<>();
     private static Map<String, Object> declarations = new HashMap<String, Object>();
     private static Configuration freeMarkerConfiguration;
@@ -64,15 +47,6 @@ public class AstNodesGenerator {
     public static ANTLRParser.grammarSpec_return source(String source) throws IOException,
             RecognitionException {
         ANTLRStringStream in = new ANTLRStringStream(source);
-        /*ANTLRLexer lexer = new ANTLRLexer(in);
-        BufferedTokenStream stream = new BufferedTokenStream(lexer);
-        ANTLRParser parser = new ANTLRParser(stream);
-
-        Object grammarDef = parser.grammarSpec();
-
-        return grammarDef;*/
-
-        // InputStream in = new FileInputStream(path);
         GrammarASTAdaptor re = new GrammarASTAdaptor(in);
         ANTLRLexer lexer = new ANTLRLexer(in);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -100,7 +74,7 @@ public class AstNodesGenerator {
         return s.substring(1, s.length() - 1);
     }
 
-    private static String capitalize(String s) {
+    public static String capitalize(String s) {
         return s.substring(0, 1).toUpperCase() + s.substring(1, s.length());
     }
 
@@ -143,7 +117,18 @@ public class AstNodesGenerator {
     }
 
     private static boolean isSingleElement(GrammarAST tree) {
-        return tree.getType() == T_BLOCK && tree.getChildCount() == 1 && tree.getChild(0).getType() == T_ALT && tree.getChild(0).getChildCount() == 1;
+        if (tree.getType() == T_BLOCK && tree.getChildCount() == 1 && tree.getChild(0).getType() == T_ALT){
+            // We can ignore fields of type 62
+            int fieldsCount = 0;
+            for (int i=0;i<tree.getChild(0).getChildCount();i++){
+                if (tree.getChild(0).getChild(i).getType() != T_STRING_LITERAL){
+                    fieldsCount += 1;
+                }
+            }
+            return fieldsCount == 1;
+        } else {
+            return false;
+        }
     }
 
     private static boolean isSingleSequence(GrammarAST tree) {
@@ -185,9 +170,14 @@ public class AstNodesGenerator {
             // like '.' or ',' we are just considering the second element
             GrammarAST alt = (GrammarAST) tree.getChild(0).getChild(0);
             if (alt.getChildCount() == 2 && alt.getChild(0).getType() == 62) {
-                return alt.getChild(1).getText();
+                if (alt.getChild(1).getType() == T_ADD_ASSIGN){
+                    return alt.getChild(1).getChild(0).getText();
+                } else {
+                    return alt.getChild(1).getText();
+                }
             }
         }
+        printTree(tree, 0);
         throw new RuntimeException("Name for field " + tree.getType());
     }
 
@@ -201,7 +191,11 @@ public class AstNodesGenerator {
             // like '.' or ',' we are just considering the second element
             GrammarAST alt = (GrammarAST) tree.getChild(0).getChild(0);
             if (alt.getChildCount() == 2 && alt.getChild(0).getType() == 62) {
-                return alt.getChild(1).getText();
+                if (alt.getChild(1).getType() == T_ADD_ASSIGN){
+                    return alt.getChild(1).getChild(1).getText();
+                } else {
+                    return alt.getChild(1).getText();
+                }
             }
         }
         throw new RuntimeException();
@@ -213,6 +207,8 @@ public class AstNodesGenerator {
     }
 
     private static Optional<Map<String, Object>> processField(GrammarAST tree) {
+        //System.out.println("PROCESSING FIELD "+tree);
+        //printTree(tree, 3);
         if (tree.getType() == 88) {
             String name = fieldName(tree, false);
             //System.out.println("Optional FIELD "+name);
@@ -223,7 +219,8 @@ public class AstNodesGenerator {
             ));
         } else if (tree.getType() == 79) {
             String name = fieldName(tree, true);
-            //System.out.println("Multiple FIELD " + name);
+            System.out.println("Multiplesss FIELD " + name);
+            printTree(tree, 10);
             return Optional.of(ImmutableMap.of(
                     "name", name,
                     "type", fieldType(tree),
@@ -239,10 +236,20 @@ public class AstNodesGenerator {
                         "multiple", false
                 ));
             }
-        } else if (tree.getType() == 62) {
-            //System.out.println("TERMINAL FIELD " + tree);
+        } else if (tree.getType() == T_STRING_LITERAL) {
             return Optional.empty();
+        } else if (tree.getType() == T_NON_TERMINAL) {
+            return Optional.of(ImmutableMap.of(
+                    "name", tree.getText(),
+                    "type", tree.getText(),
+                    "multiple", false
+            ));
+        } else if (tree.getType() == T_ADD_ASSIGN) {
+            //System.out.println("ADD ASSIGN");
+            //printTree(tree, 0);
+            return processField((GrammarAST)tree.getChild(1));
         } else {
+            printTree(tree, 0);
             throw new RuntimeException("type is " + tree.getType());
         }
     }
@@ -253,10 +260,12 @@ public class AstNodesGenerator {
         for (int i = 0; i < nonTerminalTree.getChild(0).getChildCount(); i++) {
             processField((GrammarAST) nonTerminalTree.getChild(0).getChild(i)).ifPresent(
                     (field) -> {
-                        try {
-                            processDeclaration((String) field.get("type"));
-                        } catch (IOException | TemplateException e) {
-                            throw new RuntimeException(e);
+                        if (!name.equals(field.get("type"))) {
+                            try {
+                                processDeclaration((String) field.get("type"));
+                            } catch (IOException | TemplateException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
                         fields.add(field);
                     }
@@ -270,20 +279,19 @@ public class AstNodesGenerator {
     }
 
     private static InterfaceDef processAlternative(String name, GrammarAST nonTerminalTree) throws IOException, TemplateException {
-        /*List<Map<String, Object>> fields = new ArrayList<>();
+        //List<String> fields = new ArrayList<>();
+        //printTree(nonTerminalTree, 0);
         // We expect to have just children in the form BLOCK / ALT
-        for (int i = 0; i < nonTerminalTree.getChild(0).getChildCount(); i++) {
-            processField((GrammarAST) nonTerminalTree.getChild(0).getChild(i)).ifPresent(
-                    (field) -> {
-                        try {
-                            processDeclaration((String) field.get("type"));
-                        } catch (IOException | TemplateException e) {
-                            throw new RuntimeException(e);
-                        }
-                        fields.add(field);
-                    }
-            );
-        }*/
+        for (int i = 0; i < nonTerminalTree.getChildCount(); i++) {
+            if (T_NON_TERMINAL == nonTerminalTree.getChild(i).getChild(0).getType()) {
+                String element = nonTerminalTree.getChild(i).getChild(0).getText();
+                try {
+                    processDeclaration(element);
+                } catch (IOException | TemplateException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
 
         InterfaceDef interfaceDef = new InterfaceDef(name, name + "Context");
         declarations.put(name, interfaceDef);
@@ -295,7 +303,7 @@ public class AstNodesGenerator {
         Template template = freeMarkerConfiguration.getTemplate(templateName);
         StringWriter sw = new StringWriter();
         template.process(data, sw);
-        System.out.println(sw.toString());
+        //System.out.println(sw.toString());
     }
 
     public static void processGrammar(GrammarAST tree, String startingSymbol) throws IOException, TemplateException {
@@ -321,33 +329,37 @@ public class AstNodesGenerator {
         if (declarations.containsKey(symbol)) {
             return declarations.get(symbol);
         }
-        System.out.println("SYMBOL " + symbol);
-        GrammarAST declaration = rules.get(symbol);
-        printTree(declaration, 0);
+        try {
+            System.out.println("SYMBOL " + symbol);
+            GrammarAST declaration = rules.get(symbol);
+            //printTree(declaration, 0);
 
-        int type = declaration.getChild(0).getType();
-        if (type == T_NON_TERMINAL) {
-            GrammarAST block = (GrammarAST) declaration.getChild(1);
-            if (isSingleSequence(block)) {
-                System.out.println("  single sequence");
-                return processSequence(symbol, block);
-            } else if (isTransparent(block)) {
-                System.out.println("  transparent");
-                String aliasedName = block.getChild(0).getChild(0).getText();
-                declarations.put(ruleName(declaration), declarations.get(aliasedName));
-                return declarations.get(ruleName(declaration));
-            } else if (isAlternative(block)) {
-                System.out.println("  interface");
-                return processAlternative(symbol, block);
+            int type = declaration.getChild(0).getType();
+            if (type == T_NON_TERMINAL) {
+                GrammarAST block = (GrammarAST) declaration.getChild(1);
+                if (isSingleSequence(block)) {
+                    System.out.println("  single sequence");
+                    return processSequence(symbol, block);
+                } else if (isTransparent(block)) {
+                    System.out.println("  transparent");
+                    String aliasedName = block.getChild(0).getChild(0).getText();
+                    declarations.put(ruleName(declaration), declarations.get(aliasedName));
+                    return declarations.get(ruleName(declaration));
+                } else if (isAlternative(block)) {
+                    System.out.println("  interface");
+                    return processAlternative(symbol, block);
+                } else {
+                    throw new RuntimeException("Do not know how to process declaration " + symbol);
+                }
+            } else if (type == T_TERMINAL) {
+                Terminal terminal = new Terminal(symbol);
+                declarations.put(symbol, terminal);
+                return terminal;
             } else {
-                throw new RuntimeException("Do not know how to process declaration " + symbol);
+                throw new RuntimeException("Do not know how to process declaration " + symbol + " : type " + type);
             }
-        } else if (type == T_TERMINAL) {
-            Terminal terminal = new Terminal(symbol);
-            declarations.put(symbol, terminal);
-            return terminal;
-        } else {
-            throw new RuntimeException("Do not know how to process declaration " + symbol + " : type " + type);
+        } catch (RuntimeException e){
+            throw new RuntimeException("processDeclaration "+symbol, e);
         }
     }
 
@@ -357,75 +369,7 @@ public class AstNodesGenerator {
 
         String antlrCode = readFile("src/main/antlr4/com/github/javamodel/Java8.g4");
         ANTLRParser.grammarSpec_return result = source(antlrCode);
-        //printTree(result.getTree(), 0);
         processGrammar(result.getTree(), "compilationUnit");
-    }
-
-    private static class InterfaceDef {
-        private String name;
-        private String antlrNodeClass;
-
-        public InterfaceDef(String name, String antlrNodeClass) {
-            this.name = name;
-            this.antlrNodeClass = antlrNodeClass;
-        }
-
-        public Map<String, Object> toMap() {
-            Set<String> imports = new HashSet<>();
-            /*for (Map<String, Object> field : fields) {
-                imports.add("com.github.javamodel." + capitalize((String) field.get("type")));
-            }*/
-            return ImmutableMap.of(
-                    "name", name,
-                    "antlrNodeClass", antlrNodeClass,
-                    "imports", imports);
-        }
-    }
-
-    private static class ClassDef {
-        private String name;
-        private String antlrNodeClass;
-        private List<Map<String, Object>> fields;
-
-        public ClassDef(String name, String antlrNodeClass, List<Map<String, Object>> fields) {
-            this.name = name;
-            this.antlrNodeClass = antlrNodeClass;
-            this.fields = fields;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getAntlrNodeClass() {
-            return antlrNodeClass;
-        }
-
-        public List<Map<String, Object>> getFields() {
-            return fields;
-        }
-
-        public Map<String, Object> toMap() {
-            Set<String> imports = new HashSet<>();
-            for (Map<String, Object> field : fields) {
-                imports.add("com.github.javamodel." + capitalize((String) field.get("type")));
-            }
-            return ImmutableMap.of(
-                    "name", name,
-                    "antlrNodeClass", antlrNodeClass,
-                    "fields", fields,
-                    "imports", imports);
-        }
-    }
-
-    //We should start from the root (CompilationUnit) and look into the other rules as we go.
-
-    public static class Terminal {
-        private String name;
-
-        public Terminal(String name) {
-            this.name = name;
-        }
     }
 
 }

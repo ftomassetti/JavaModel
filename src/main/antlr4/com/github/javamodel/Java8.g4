@@ -197,18 +197,15 @@ wildcardBounds
  */
 
 packageName
-	:	Identifier
-	|	packageName '.' Identifier
+	:	parts+=Identifier ('.' parts+=Identifier)*
 	;
 
 typeName
-	:	Identifier
-	|	packageOrTypeName '.' Identifier
+	:	(packageOrTypeName '.')? Identifier
 	;
 
 packageOrTypeName
-	:	Identifier
-	|	packageOrTypeName '.' Identifier
+	:	parts+=Identifier ('.' parts+=Identifier)*
 	;
 
 expressionName
@@ -1224,49 +1221,41 @@ assignmentOperator
 	;
 
 conditionalExpression
-	:	conditionalOrExpression
-	|	conditionalOrExpression '?' expression ':' conditionalExpression
+	:	conditionalOrExpression ('?' expression ':' conditionalExpression)?
 	;
 
 conditionalOrExpression
-	:	conditionalAndExpression
-	|	conditionalOrExpression '||' conditionalAndExpression
+	:	(conditionalOrExpression '||')? conditionalAndExpression
 	;
 
 conditionalAndExpression
-	:	inclusiveOrExpression
-	|	conditionalAndExpression '&&' inclusiveOrExpression
+	:	(conditionalAndExpression '&&')? inclusiveOrExpression
 	;
 
 inclusiveOrExpression
-	:	exclusiveOrExpression
-	|	inclusiveOrExpression '|' exclusiveOrExpression
+	:	(inclusiveOrExpression '|')? exclusiveOrExpression
 	;
 
 exclusiveOrExpression
-	:	andExpression
-	|	exclusiveOrExpression '^' andExpression
+	:	(exclusiveOrExpression '^')? andExpression
 	;
 
 andExpression
-	:	equalityExpression
-	|	andExpression '&' equalityExpression
+	:	(andExpression '&')? equalityExpression
 	;
 
 equalityExpression
-	:	relationalExpression
-	|	equalityExpression '==' relationalExpression
-	|	equalityExpression '!=' relationalExpression
+	:	(equalityExpression equalityOperator)? relationalExpression
 	;
 
+equalityOperator: '==' | '!=';
+
+
 relationalExpression
-	:	shiftExpression
-	|	relationalExpression '<' shiftExpression
-	|	relationalExpression '>' shiftExpression
-	|	relationalExpression '<=' shiftExpression
-	|	relationalExpression '>=' shiftExpression
-	|	relationalExpression 'instanceof' referenceType
+	:	(relationalExpression relationalOperator)? shiftExpression
 	;
+
+relationalOperator: '<' | '>' | '<=' | '>=' | 'instanceof';
 
 shiftExpression
 	:	additiveExpression
