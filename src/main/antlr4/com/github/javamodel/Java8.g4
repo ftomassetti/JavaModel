@@ -230,7 +230,7 @@ ambiguousName
  */
 
 compilationUnit
-	:	packageDeclaration? importDeclaration* typeDeclaration* EOF
+	:	packageDeclaration? importDeclaration* topTypes+=typeDeclaration* EOF
 	;
 
 packageDeclaration

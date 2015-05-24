@@ -4,8 +4,6 @@ import com.github.javamodel.Java8Parser;
 import com.github.javamodel.ast.AstNode;
 import com.github.javamodel.ast.common.PrimitiveType;
 import com.github.javamodel.ast.common.PrimitiveTypeRef;
-import com.github.javamodel.parsing.NodeTree;
-import com.github.javamodel.parsing.ParserCli;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 

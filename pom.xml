@@ -19,7 +19,20 @@
       <artifactId>antlr4-runtime</artifactId>
       <version>4.5</version>
     </dependency>
-    <dependency>
+      <!-- For the code generation -->
+      <dependency>
+          <groupId>org.antlr</groupId>
+          <artifactId>antlr4</artifactId>
+          <version>4.5</version>
+      </dependency>
+      <dependency>
+          <groupId>org.freemarker</groupId>
+          <artifactId>freemarker</artifactId>
+          <version>2.3.20</version>
+      </dependency>
+
+
+      <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.16.4</version>
