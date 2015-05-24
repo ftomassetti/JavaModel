@@ -1,6 +1,13 @@
 // Generated class
 
-public class ${name?cap_first} extends AstNode {
+import com.github.javamodel.Java8Parser;
+import com.github.javamodel.Node;
+import java.util.ArrayList;
+<#list imports as import>
+import ${import};
+</#list>
+
+public class ${name?cap_first} extends Node {
 
 <#list fields as field>
 
