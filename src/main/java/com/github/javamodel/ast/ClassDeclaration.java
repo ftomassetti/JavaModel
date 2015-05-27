@@ -16,6 +16,16 @@ public class ClassDeclaration extends TypeDeclaration {
     private final MultipleRelation<ClassDeclaration, TypeParameter> typeParameters = new MultipleRelation<>(this);
     private final SingleRelation<ClassDeclaration, TypeRef> superclass = new SingleRelation<>(this);
     private final MultipleRelation<ClassDeclaration, TypeRef> interfaces = new MultipleRelation<>(this);
+    private final MultipleRelation<ClassDeclaration, FieldDeclaration> fields = new MultipleRelation<>(this);
+    private final MultipleRelation<ClassDeclaration, MethodDeclaration> methods = new MultipleRelation<>(this);
+    private final MultipleRelation<ClassDeclaration, TypeDeclaration> internalTypes = new MultipleRelation<>(this);
+
+    @Override
+    public String toString() {
+        return "ClassDeclaration{" +
+                "name='" + name + '\'' +
+                '}';
+    }
 
     public static ClassDeclaration fromAntlrNode(Java8Parser.NormalClassDeclarationContext antlrNode) {
         ClassDeclaration instance = new ClassDeclaration();
@@ -36,6 +46,28 @@ public class ClassDeclaration extends TypeDeclaration {
         if (antlrNode.superinterfaces() != null) {
             antlrNode.superinterfaces().interfaceTypeList().interfaceType().forEach((an) -> instance.interfaces.add(TypeRef.fromAntlrNode(an.classType())));
         }
+        
+        
+        antlrNode.classBody().classBodyDeclaration().forEach((an)->{
+            if (an.instanceInitializer() != null){
+                // TODO consider instance initializers        
+            } else if (an.staticInitializer() != null) {
+                // TODO consider static initializers        
+            } else if (an.constructorDeclaration() != null) {
+                // TODO consider constructors
+            } else {
+                if (an.classMemberDeclaration().classDeclaration() != null){
+                    instance.internalTypes.add(TypeDeclaration.fromAntlrNode(an.classMemberDeclaration().classDeclaration()));
+                } else if (an.classMemberDeclaration().fieldDeclaration() != null){
+                    instance.fields.add(FieldDeclaration.fromAntlrNode(an.classMemberDeclaration().fieldDeclaration()));
+                } else if (an.classMemberDeclaration().interfaceDeclaration() != null) {
+                    instance.internalTypes.add(InterfaceDeclaration.fromAntlrNode(an.classMemberDeclaration().interfaceDeclaration()));
+                } else if (an.classMemberDeclaration().methodDeclaration() != null) {
+                    instance.methods.add(MethodDeclaration.fromAntlrNode(an.classMemberDeclaration().methodDeclaration()));
+                }
+            }
+        });
+        
         return instance;
     }
 }

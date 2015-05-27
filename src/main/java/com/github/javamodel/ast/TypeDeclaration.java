@@ -10,14 +10,17 @@ public abstract class TypeDeclaration extends Node {
 
     public static TypeDeclaration fromAntlrNode(Java8Parser.TypeDeclarationContext antlrNode) {
         if (antlrNode.classDeclaration() != null ){
-            if (antlrNode.classDeclaration().enumDeclaration() != null) {
-                return EnumDeclaration.fromAntlrNode(antlrNode.classDeclaration().enumDeclaration());
-            } else {
-                return ClassDeclaration.fromAntlrNode(antlrNode.classDeclaration().normalClassDeclaration());
-            }
+            return fromAntlrNode(antlrNode.classDeclaration());
         } else {
             return InterfaceDeclaration.fromAntlrNode(antlrNode.interfaceDeclaration());
         }
     }
-    
+
+    public static TypeDeclaration fromAntlrNode(Java8Parser.ClassDeclarationContext antlrNode) {
+        if (antlrNode.enumDeclaration() != null) {
+            return EnumDeclaration.fromAntlrNode(antlrNode.enumDeclaration());
+        } else {
+            return ClassDeclaration.fromAntlrNode(antlrNode.normalClassDeclaration());
+        }
+    }
 }

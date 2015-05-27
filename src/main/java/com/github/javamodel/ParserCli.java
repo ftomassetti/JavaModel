@@ -40,7 +40,6 @@ public class ParserCli {
         }
     }
 
-
     public static String treeString(Node node, int indentation) {
         StringBuffer sb = new StringBuffer();
         printTree(node,  indentation, sb);
