@@ -8,10 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public class ParserCli
-{
+public class ParserCli {
 
-    public CompilationUnit parse(String code){
+    public CompilationUnit parse(String code) {
         InputStream is = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
         Java8Lexer lexer = null;
         try {
@@ -31,11 +30,29 @@ public class ParserCli
         return compilationUnit;
     }
 
+    public static void printTree(Node node, int indentation, StringBuffer stringBuffer) {
+        if (node == null) return;
+        for (int j = 0; j < indentation; j++) stringBuffer.append("  ");
+        stringBuffer.append(node);
+        stringBuffer.append("\n");
+        for (Node child : node.getChildren()) {
+            printTree(child, indentation + 1, stringBuffer);
+        }
+    }
+
+
+    public static String treeString(Node node, int indentation) {
+        StringBuffer sb = new StringBuffer();
+        printTree(node,  indentation, sb);
+        return sb.toString();
+    }
+
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
-        String code = "class A { class B {class C {} } }";
+        String code = "class A { class B { class C {} } }";
         Node root = new ParserCli().parse(code);
-        //StringBuffer stringBuffer = new StringBuffer();
-        //NodeTree.printTree(root, "root", 0, stringBuffer);
-        //System.out.println(stringBuffer.toString());
+        System.out.println("ROOT "+root);
+        StringBuffer stringBuffer = new StringBuffer();
+        printTree(root, 0, stringBuffer);
+        System.out.println(stringBuffer.toString());
     }
 }

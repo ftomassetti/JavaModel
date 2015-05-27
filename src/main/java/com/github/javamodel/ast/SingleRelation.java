@@ -20,7 +20,12 @@ public class SingleRelation<P extends Node, C extends Node> {
     }
     
     public void set(C child){
+        if (this.child != null) {
+            this.child.setParent(null);
+        }
         this.child = child;
-        
+        if (child != null) {
+            child.setParent(parent);
+        }
     }
 }

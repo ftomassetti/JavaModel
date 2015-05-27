@@ -19,5 +19,8 @@ public class MultipleRelation<P extends Node, C extends Node> {
 
     public void add(C child) {
         children.add(child);
+        if (child != null) {
+            child.setParent(parent);
+        }
     }
 }

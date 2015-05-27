@@ -13,7 +13,7 @@ public abstract class TypeDeclaration extends Node {
             if (antlrNode.classDeclaration().enumDeclaration() != null) {
                 return EnumDeclaration.fromAntlrNode(antlrNode.classDeclaration().enumDeclaration());
             } else {
-                return ClassDeclaration.fromAntlrNode(antlrNode.classDeclaration());
+                return ClassDeclaration.fromAntlrNode(antlrNode.classDeclaration().normalClassDeclaration());
             }
         } else {
             return InterfaceDeclaration.fromAntlrNode(antlrNode.interfaceDeclaration());
