@@ -9,9 +9,15 @@ import com.github.javamodel.Node;
 public abstract class TypeDeclaration extends Node {
 
     public static TypeDeclaration fromAntlrNode(Java8Parser.TypeDeclarationContext antlrNode) {
-        //TypeDeclaration instance = new TypeDeclaration();
-        //return instance;
-        return null;
+        if (antlrNode.classDeclaration() != null ){
+            if (antlrNode.classDeclaration().enumDeclaration() != null) {
+                return EnumDeclaration.fromAntlrNode(antlrNode.classDeclaration().enumDeclaration());
+            } else {
+                return ClassDeclaration.fromAntlrNode(antlrNode.classDeclaration());
+            }
+        } else {
+            return InterfaceDeclaration.fromAntlrNode(antlrNode.interfaceDeclaration());
+        }
     }
     
 }

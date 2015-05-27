@@ -15,6 +15,7 @@ public class PackageDeclaration extends Node {
     private List<String> identifiers = new ArrayList<>();
 
     public static PackageDeclaration fromAntlrNode(Java8Parser.PackageDeclarationContext antlrNode) {
+        if (antlrNode == null) return null;
         PackageDeclaration instance = new PackageDeclaration();
         antlrNode.packageModifier().forEach((pm) -> instance.annotations.add(AnnotationUsage.fromAntlrNode(pm.annotation())));
         antlrNode.Identifier().forEach((id) -> instance.identifiers.add(id.getText()));

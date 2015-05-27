@@ -10,6 +10,6 @@ public class AnnotationUsage extends Node {
 
     public static AnnotationUsage fromAntlrNode(Java8Parser.AnnotationContext antlrNode){
         AnnotationUsage instance = new AnnotationUsage();
-        return instance;
+        throw new UnsupportedOperationException();
     }
 }

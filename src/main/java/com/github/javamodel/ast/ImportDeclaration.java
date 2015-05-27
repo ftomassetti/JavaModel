@@ -10,7 +10,7 @@ public class ImportDeclaration extends Node {
 
     public static ImportDeclaration fromAntlrNode(Java8Parser.ImportDeclarationContext antlrNode) {
         ImportDeclaration instance = new ImportDeclaration();
-        return instance;
+        throw new UnsupportedOperationException();
     }
     
 }
