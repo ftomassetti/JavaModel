@@ -12,4 +12,33 @@ public class TypeRef extends Node {
         TypeRef instance = new TypeRef();
         throw new UnsupportedOperationException();
     }
+
+    public static TypeRef fromAntlrNode(Java8Parser.UnannTypeContext antlrNode) {
+        if (antlrNode.unannPrimitiveType() != null){
+            return fromAntlrNode(antlrNode.unannPrimitiveType());
+        } else {
+            return fromAntlrNode(antlrNode.unannReferenceType());
+        }
+    }
+
+    private static TypeRef fromAntlrNode(Java8Parser.UnannReferenceTypeContext antlrNode) {
+        if (antlrNode.unannArrayType()!=null){
+            return ArrayTypeRef.fromAntlrNode(antlrNode.unannArrayType());
+        } else if (antlrNode.unannClassOrInterfaceType() != null){
+            if (antlrNode.unannClassOrInterfaceType().unannClassType_lf_unannClassOrInterfaceType() != null){
+
+            } else if (antlrNode.unannClassOrInterfaceType().unannClassType_lfno_unannClassOrInterfaceType() != null) {
+                throw new UnsupportedOperationException();
+            } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lf_unannClassOrInterfaceType() != null){
+                
+            } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lfno_unannClassOrInterfaceType() != null){
+                throw new UnsupportedOperationException();
+            }
+        } else {
+            
+        }
+    }
+
+    private static TypeRef fromAntlrNode(Java8Parser.UnannPrimitiveTypeContext antlrNode) {
+    }
 }
