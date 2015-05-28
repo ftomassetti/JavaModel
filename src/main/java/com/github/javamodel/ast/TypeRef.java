@@ -15,7 +15,7 @@ public class TypeRef extends Node {
 
     public static TypeRef fromAntlrNode(Java8Parser.UnannTypeContext antlrNode) {
         if (antlrNode.unannPrimitiveType() != null){
-            return fromAntlrNode(antlrNode.unannPrimitiveType());
+            return PrimitiveTypeRef.fromAntlrNode(antlrNode.unannPrimitiveType());
         } else {
             return fromAntlrNode(antlrNode.unannReferenceType());
         }
@@ -26,19 +26,19 @@ public class TypeRef extends Node {
             return ArrayTypeRef.fromAntlrNode(antlrNode.unannArrayType());
         } else if (antlrNode.unannClassOrInterfaceType() != null){
             if (antlrNode.unannClassOrInterfaceType().unannClassType_lf_unannClassOrInterfaceType() != null){
-
+                throw new UnsupportedOperationException();
             } else if (antlrNode.unannClassOrInterfaceType().unannClassType_lfno_unannClassOrInterfaceType() != null) {
                 throw new UnsupportedOperationException();
             } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lf_unannClassOrInterfaceType() != null){
-                
+                throw new UnsupportedOperationException();
             } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lfno_unannClassOrInterfaceType() != null){
+                throw new UnsupportedOperationException();
+            } else {
                 throw new UnsupportedOperationException();
             }
         } else {
-            
+            throw new UnsupportedOperationException();
         }
     }
 
-    private static TypeRef fromAntlrNode(Java8Parser.UnannPrimitiveTypeContext antlrNode) {
-    }
 }
