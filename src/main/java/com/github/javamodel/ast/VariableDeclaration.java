@@ -10,6 +10,13 @@ public class VariableDeclaration extends Node {
     
     private String name;
 
+    @Override
+    public String toString() {
+        return "VariableDeclaration{" +
+                "name='" + name + '\'' +
+                '}';
+    }
+
     public static VariableDeclaration fromAntlrNode(Java8Parser.VariableDeclaratorContext antlrNode) {
         VariableDeclaration instance = new VariableDeclaration();
         if (antlrNode.variableDeclaratorId().dims() != null){

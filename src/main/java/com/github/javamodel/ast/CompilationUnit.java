@@ -6,6 +6,12 @@ import com.github.javamodel.Node;
 public class CompilationUnit extends Node {
     
     private SingleRelation<CompilationUnit, PackageDeclaration> packageDeclaration = new SingleRelation<>(this);
+
+    @Override
+    public String toString() {
+        return "CompilationUnit{}";
+    }
+
     private MultipleRelation<CompilationUnit, ImportDeclaration> imports = new MultipleRelation<>(this);
     private MultipleRelation<CompilationUnit, TypeDeclaration> topTypes = new MultipleRelation<>(this);
     

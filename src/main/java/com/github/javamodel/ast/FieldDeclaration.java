@@ -11,6 +11,10 @@ import java.util.List;
  * Created by ftomassetti on 27/05/15.
  */
 public class FieldDeclaration extends Node {
+    @Override
+    public String toString() {
+        return "FieldDeclaration{}";
+    }
 
     private List<Modifier> modifiers = new ArrayList<>();
     private final MultipleRelation<FieldDeclaration, AnnotationUsage> annotations = new MultipleRelation<>(this);
