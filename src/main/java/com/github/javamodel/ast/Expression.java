@@ -2,59 +2,71 @@ package com.github.javamodel.ast;
 
 import com.github.javamodel.Java8Parser;
 import com.github.javamodel.Node;
+import com.github.javamodel.ast.expressions.BinaryExpression;
+import com.github.javamodel.ast.literals.LiteralExpression;
 
 /**
  * Created by ftomassetti on 29/05/15.
  */
 public abstract class Expression extends Node {
 
+    private static Expression fromAntlrNode(Java8Parser.AdditiveExpressionContext antlrNode){
+        if (antlrNode.additiveExpression() != null){
+            return new BinaryExpression(BinaryExpression.Operator.fromText(antlrNode.getChild(1).getText()),
+                    fromAntlrNode(antlrNode.additiveExpression()),
+                    fromAntlrNode(antlrNode.multiplicativeExpression()));
+        } else {
+            return fromAntlrNode(antlrNode.multiplicativeExpression());
+        }
+    }
+
+    private static Expression fromAntlrNode(Java8Parser.MultiplicativeExpressionContext antlrNode){
+            if (antlrNode.unaryExpression() != null){
+                if (antlrNode.unaryExpression().unaryExpressionNotPlusMinus() != null) {
+                    Java8Parser.UnaryExpressionNotPlusMinusContext unary = antlrNode.unaryExpression().unaryExpressionNotPlusMinus();
+                    if (unary.castExpression() != null){
+                        throw new UnsupportedOperationException();
+                    } else if (unary.postfixExpression() != null){
+                        if (unary.postfixExpression().expressionName() != null) {
+                            throw new UnsupportedOperationException();
+                        } else if (unary.postfixExpression().primary() != null){
+                            if (unary.postfixExpression().primary().arrayCreationExpression() != null) {
+                                throw new UnsupportedOperationException();
+                            } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary() != null){
+                                if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().arrayAccess_lfno_primary() != null){
+                                    throw new UnsupportedOperationException();
+                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary() != null){
+                                    throw new UnsupportedOperationException();
+                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal() != null){
+                                    return LiteralExpression.fromAntlrNode(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal());
+                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null){
+                                    throw new UnsupportedOperationException();
+                                } else {
+                                    throw new UnsupportedOperationException();
+                                }
+                            } else {
+                                throw new UnsupportedOperationException();
+                            }
+                        } else {
+                            throw new UnsupportedOperationException();
+                        }
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+            } else {
+                throw new UnsupportedOperationException();
+            }
+    }
+
     private static Expression fromAntlrNode(Java8Parser.AndExpressionContext antlrNode){
         if (antlrNode.equalityExpression() != null){
             if (antlrNode.equalityExpression().relationalExpression() != null){
                 if (antlrNode.equalityExpression().relationalExpression().shiftExpression() != null){
                     if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression() != null){
-                        if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression() != null){
-                            if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression().unaryExpression() != null){
-                                if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus() != null) {
-                                    Java8Parser.UnaryExpressionNotPlusMinusContext unary = antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus();
-                                    if (unary.castExpression() != null){
-                                        throw new UnsupportedOperationException();
-                                    } else if (unary.postfixExpression() != null){
-                                        if (unary.postfixExpression().expressionName() != null) {
-                                            throw new UnsupportedOperationException();
-                                        } else if (unary.postfixExpression().primary() != null){
-                                            if (unary.postfixExpression().primary().arrayCreationExpression() != null) {
-                                                throw new UnsupportedOperationException();
-                                            } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary() != null){
-                                                if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().arrayAccess_lfno_primary() != null){
-                                                    throw new UnsupportedOperationException();
-                                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary() != null){
-                                                    throw new UnsupportedOperationException();
-                                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal() != null){
-                                                    throw new UnsupportedOperationException();
-                                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null){
-                                                    throw new UnsupportedOperationException();
-                                                } else {
-                                                    throw new UnsupportedOperationException();
-                                                }
-                                            } else {
-                                                throw new UnsupportedOperationException();
-                                            }
-                                        } else {
-                                            throw new UnsupportedOperationException();
-                                        }
-                                    } else {
-                                        throw new UnsupportedOperationException();
-                                    }
-                                } else {
-                                    throw new UnsupportedOperationException();
-                                }
-                            } else {
-                                throw new UnsupportedOperationException();    
-                            }
-                        } else {
-                            throw new UnsupportedOperationException();
-                        }
+                        return fromAntlrNode(antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression());
                     } else {
                         throw new UnsupportedOperationException();
                     }

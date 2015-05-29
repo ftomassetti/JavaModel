@@ -8,8 +8,18 @@ import com.github.javamodel.ast.Expression;
  */
 public class IntegerLiteralExpression extends LiteralExpression {
 
+    private String text;
+
+    @Override
+    public String toString() {
+        return "IntegerLiteralExpression{" +
+                "text='" + text + '\'' +
+                '}';
+    }
 
     public static Expression fromAntlrNode(Java8Parser.LiteralContext antlrNode){
-        throw new UnsupportedOperationException();
+        IntegerLiteralExpression instance = new IntegerLiteralExpression();
+        instance.text = antlrNode.IntegerLiteral().getText();
+        return instance;
     }
 }

@@ -14,4 +14,9 @@ public class ExpressionVariableInitializater extends VariableInitializer {
         instance.expression.set(Expression.fromAntlrNode(antlrNode));
         return instance;
     }
+
+    @Override
+    public String toString() {
+        return "ExpressionVariableInitializater{}";
+    }
 }

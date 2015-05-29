@@ -37,4 +37,18 @@ public class NodeTreeTest {
                 "      ClassDeclaration{name='C'}", toTree("class A { class B { class C {} }}"));
 
     }
+
+    @Test
+    public void testAddition(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    FieldDeclaration{}\n" +
+                "      PrimitiveTypeRef{INT}\n" +
+                "      VariableDeclaration{name='a'}\n" +
+                "        ExpressionVariableInitializater{}\n" +
+                "          BinaryExpression{operator=PLUS}\n" +
+                "            IntegerLiteralExpression{text='1'}\n" +
+                "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 + 10; }"));
+
+    }
 }
