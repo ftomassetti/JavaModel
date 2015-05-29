@@ -44,7 +44,7 @@ public abstract class Expression extends Node {
                         if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().arrayAccess_lfno_primary() != null) {
                             throw new UnsupportedOperationException();
                         } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary() != null) {
-                            throw new UnsupportedOperationException();
+                            return ObjectInstantiationExpression.fromAntlrNode(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary());
                         } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal() != null) {
                             return LiteralExpression.fromAntlrNode(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal());
                         } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null) {

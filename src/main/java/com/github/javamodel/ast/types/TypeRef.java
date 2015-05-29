@@ -28,10 +28,10 @@ public class TypeRef extends Node {
         if (antlrNode.unannArrayType()!=null){
             return ArrayTypeRef.fromAntlrNode(antlrNode.unannArrayType());
         } else if (antlrNode.unannClassOrInterfaceType() != null){
-            if (antlrNode.unannClassOrInterfaceType().unannClassType_lf_unannClassOrInterfaceType() != null){
+            if (antlrNode.unannClassOrInterfaceType().unannClassType_lf_unannClassOrInterfaceType() != null && !antlrNode.unannClassOrInterfaceType().unannClassType_lf_unannClassOrInterfaceType().isEmpty()){
                 throw new UnsupportedOperationException();
             } else if (antlrNode.unannClassOrInterfaceType().unannClassType_lfno_unannClassOrInterfaceType() != null) {
-                throw new UnsupportedOperationException();
+                return DeclaredTypeRef.fromAntlrNode(antlrNode.unannClassOrInterfaceType().unannClassType_lfno_unannClassOrInterfaceType());
             } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lf_unannClassOrInterfaceType() != null){
                 throw new UnsupportedOperationException();
             } else if (antlrNode.unannClassOrInterfaceType().unannInterfaceType_lfno_unannClassOrInterfaceType() != null){
