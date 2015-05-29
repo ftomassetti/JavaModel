@@ -77,4 +77,14 @@ public class NodeTreeTest {
                 "          NameReferenceExpression{name='b'}", toTree("class A { int a = b; }"));
 
     }
+
+    @Test
+    public void testSimplestClassMethod(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    MethodDeclaration{name='foo', modifiers=[]}\n" +
+                "      VoidTypeRef{}\n" +
+                "      BlockStatement{}", toTree("class A { void foo(){} }"));
+
+    }
 }

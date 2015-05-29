@@ -1,7 +1,7 @@
 package com.github.javamodel.ast;
 
 import com.github.javamodel.Java8Parser;
-import com.sun.org.apache.xpath.internal.operations.Mult;
+import com.github.javamodel.ast.types.TypeRef;
 
 import java.util.ArrayList;
 import java.util.List;

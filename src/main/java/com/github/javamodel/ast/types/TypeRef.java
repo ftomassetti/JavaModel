@@ -1,4 +1,4 @@
-package com.github.javamodel.ast;
+package com.github.javamodel.ast.types;
 
 import com.github.javamodel.Java8Parser;
 import com.github.javamodel.Node;
@@ -14,6 +14,9 @@ public class TypeRef extends Node {
     }
 
     public static TypeRef fromAntlrNode(Java8Parser.UnannTypeContext antlrNode) {
+        if (antlrNode == null){
+            throw new NullPointerException();
+        }
         if (antlrNode.unannPrimitiveType() != null){
             return PrimitiveTypeRef.fromAntlrNode(antlrNode.unannPrimitiveType());
         } else {
