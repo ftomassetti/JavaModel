@@ -1,8 +1,7 @@
-package com.github.javamodel.ast;
+package com.github.javamodel.ast.expressions;
 
 import com.github.javamodel.Java8Parser;
 import com.github.javamodel.Node;
-import com.github.javamodel.ast.expressions.BinaryExpression;
 import com.github.javamodel.ast.literals.LiteralExpression;
 
 /**
@@ -37,7 +36,7 @@ public abstract class Expression extends Node {
                 throw new UnsupportedOperationException();
             } else if (unary.postfixExpression() != null) {
                 if (unary.postfixExpression().expressionName() != null) {
-                    throw new UnsupportedOperationException();
+                    return NameReferenceExpression.fromAntlrNode(unary.postfixExpression().expressionName());
                 } else if (unary.postfixExpression().primary() != null) {
                     if (unary.postfixExpression().primary().arrayCreationExpression() != null) {
                         throw new UnsupportedOperationException();

@@ -1,6 +1,7 @@
 package com.github.javamodel.ast;
 
 import com.github.javamodel.Java8Parser;
+import com.github.javamodel.ast.expressions.Expression;
 
 /**
  * Created by ftomassetti on 29/05/15.

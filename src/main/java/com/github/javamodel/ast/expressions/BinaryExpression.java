@@ -1,9 +1,6 @@
 package com.github.javamodel.ast.expressions;
 
-import com.github.javamodel.ast.Expression;
 import com.github.javamodel.ast.SingleRelation;
-
-import java.util.Optional;
 
 /**
  * Created by federico on 29/05/15.

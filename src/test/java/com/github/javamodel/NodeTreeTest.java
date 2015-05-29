@@ -65,4 +65,16 @@ public class NodeTreeTest {
                 "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 * 10; }"));
 
     }
+
+    @Test
+    public void testNameReference(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    FieldDeclaration{}\n" +
+                "      PrimitiveTypeRef{INT}\n" +
+                "      VariableDeclaration{name='a'}\n" +
+                "        ExpressionVariableInitializater{}\n" +
+                "          NameReferenceExpression{name='b'}", toTree("class A { int a = b; }"));
+
+    }
 }
