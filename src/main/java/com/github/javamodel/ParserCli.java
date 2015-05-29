@@ -47,7 +47,7 @@ public class ParserCli {
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
-        String code = "class A { class B { class C {} }}";
+        String code = "class A { int a = 1 + 10; }";
         Node root = new ParserCli().parse(code);
         StringBuffer stringBuffer = new StringBuffer();
         printTree(root, 0, stringBuffer);

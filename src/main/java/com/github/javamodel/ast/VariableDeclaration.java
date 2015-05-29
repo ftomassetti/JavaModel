@@ -9,6 +9,7 @@ import com.github.javamodel.Node;
 public class VariableDeclaration extends Node {
     
     private String name;
+    private final SingleRelation<VariableDeclaration, VariableInitializer> initializer = new SingleRelation<VariableDeclaration, VariableInitializer>(this);
 
     @Override
     public String toString() {
@@ -24,7 +25,7 @@ public class VariableDeclaration extends Node {
         }
         instance.name = antlrNode.variableDeclaratorId().Identifier().getText();
         if (antlrNode.variableInitializer() != null){
-            throw new UnsupportedOperationException();
+            instance.initializer.set(VariableInitializer.fromAntlrNode(antlrNode.variableInitializer()));
         }
         return instance;
     }
