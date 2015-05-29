@@ -28,4 +28,13 @@ public class NodeTreeTest {
                 "      ClassDeclaration{name='C'}", toTree("class A { int a,b,c; class B { class C {} } }"));
         
     }
+
+    @Test
+    public void testInternalClasses(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    ClassDeclaration{name='B'}\n" +
+                "      ClassDeclaration{name='C'}", toTree("class A { class B { class C {} }}"));
+
+    }
 }
