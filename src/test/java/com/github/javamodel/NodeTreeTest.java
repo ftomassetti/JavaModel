@@ -51,4 +51,18 @@ public class NodeTreeTest {
                 "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 + 10; }"));
 
     }
+
+    @Test
+    public void testMultiplication(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    FieldDeclaration{}\n" +
+                "      PrimitiveTypeRef{INT}\n" +
+                "      VariableDeclaration{name='a'}\n" +
+                "        ExpressionVariableInitializater{}\n" +
+                "          BinaryExpression{operator=MULT}\n" +
+                "            IntegerLiteralExpression{text='1'}\n" +
+                "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 * 10; }"));
+
+    }
 }

@@ -14,7 +14,8 @@ public class BinaryExpression extends Expression {
         PLUS("+"),
         MINUS("-"),
         MULT("*"),
-        DIV("/");
+        DIV("/"),
+        MODULE("%");
 
         private String text;
 

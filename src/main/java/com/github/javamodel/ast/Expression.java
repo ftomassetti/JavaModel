@@ -10,8 +10,8 @@ import com.github.javamodel.ast.literals.LiteralExpression;
  */
 public abstract class Expression extends Node {
 
-    private static Expression fromAntlrNode(Java8Parser.AdditiveExpressionContext antlrNode){
-        if (antlrNode.additiveExpression() != null){
+    private static Expression fromAntlrNode(Java8Parser.AdditiveExpressionContext antlrNode) {
+        if (antlrNode.additiveExpression() != null) {
             return new BinaryExpression(BinaryExpression.Operator.fromText(antlrNode.getChild(1).getText()),
                     fromAntlrNode(antlrNode.additiveExpression()),
                     fromAntlrNode(antlrNode.multiplicativeExpression()));
@@ -20,33 +20,36 @@ public abstract class Expression extends Node {
         }
     }
 
-    private static Expression fromAntlrNode(Java8Parser.MultiplicativeExpressionContext antlrNode){
-            if (antlrNode.unaryExpression() != null){
-                if (antlrNode.unaryExpression().unaryExpressionNotPlusMinus() != null) {
-                    Java8Parser.UnaryExpressionNotPlusMinusContext unary = antlrNode.unaryExpression().unaryExpressionNotPlusMinus();
-                    if (unary.castExpression() != null){
+    private static Expression fromAntlrNode(Java8Parser.MultiplicativeExpressionContext antlrNode) {
+        if (antlrNode.multiplicativeExpression() != null) {
+            return new BinaryExpression(BinaryExpression.Operator.fromText(antlrNode.getChild(1).getText()),
+                    fromAntlrNode(antlrNode.multiplicativeExpression()),
+                    fromAntlrNode(antlrNode.unaryExpression()));
+        } else {
+            return fromAntlrNode(antlrNode.unaryExpression());
+        }
+    }
+
+    private static Expression fromAntlrNode(Java8Parser.UnaryExpressionContext antrlNode){
+        if (antrlNode.unaryExpressionNotPlusMinus() != null) {
+            Java8Parser.UnaryExpressionNotPlusMinusContext unary = antrlNode.unaryExpressionNotPlusMinus();
+            if (unary.castExpression() != null) {
+                throw new UnsupportedOperationException();
+            } else if (unary.postfixExpression() != null) {
+                if (unary.postfixExpression().expressionName() != null) {
+                    throw new UnsupportedOperationException();
+                } else if (unary.postfixExpression().primary() != null) {
+                    if (unary.postfixExpression().primary().arrayCreationExpression() != null) {
                         throw new UnsupportedOperationException();
-                    } else if (unary.postfixExpression() != null){
-                        if (unary.postfixExpression().expressionName() != null) {
+                    } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary() != null) {
+                        if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().arrayAccess_lfno_primary() != null) {
                             throw new UnsupportedOperationException();
-                        } else if (unary.postfixExpression().primary() != null){
-                            if (unary.postfixExpression().primary().arrayCreationExpression() != null) {
-                                throw new UnsupportedOperationException();
-                            } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary() != null){
-                                if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().arrayAccess_lfno_primary() != null){
-                                    throw new UnsupportedOperationException();
-                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary() != null){
-                                    throw new UnsupportedOperationException();
-                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal() != null){
-                                    return LiteralExpression.fromAntlrNode(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal());
-                                } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null){
-                                    throw new UnsupportedOperationException();
-                                } else {
-                                    throw new UnsupportedOperationException();
-                                }
-                            } else {
-                                throw new UnsupportedOperationException();
-                            }
+                        } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().classInstanceCreationExpression_lfno_primary() != null) {
+                            throw new UnsupportedOperationException();
+                        } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal() != null) {
+                            return LiteralExpression.fromAntlrNode(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().literal());
+                        } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null) {
+                            throw new UnsupportedOperationException();
                         } else {
                             throw new UnsupportedOperationException();
                         }
@@ -59,13 +62,16 @@ public abstract class Expression extends Node {
             } else {
                 throw new UnsupportedOperationException();
             }
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    private static Expression fromAntlrNode(Java8Parser.AndExpressionContext antlrNode){
-        if (antlrNode.equalityExpression() != null){
-            if (antlrNode.equalityExpression().relationalExpression() != null){
-                if (antlrNode.equalityExpression().relationalExpression().shiftExpression() != null){
-                    if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression() != null){
+    private static Expression fromAntlrNode(Java8Parser.AndExpressionContext antlrNode) {
+        if (antlrNode.equalityExpression() != null) {
+            if (antlrNode.equalityExpression().relationalExpression() != null) {
+                if (antlrNode.equalityExpression().relationalExpression().shiftExpression() != null) {
+                    if (antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression() != null) {
                         return fromAntlrNode(antlrNode.equalityExpression().relationalExpression().shiftExpression().additiveExpression());
                     } else {
                         throw new UnsupportedOperationException();
@@ -81,27 +87,27 @@ public abstract class Expression extends Node {
         }
     }
 
-    public static Expression fromAntlrNode(Java8Parser.ExpressionContext antlrNode){
-        if (antlrNode.assignmentExpression() != null){
+    public static Expression fromAntlrNode(Java8Parser.ExpressionContext antlrNode) {
+        if (antlrNode.assignmentExpression() != null) {
             if (antlrNode.assignmentExpression().assignment() != null) {
                 throw new UnsupportedOperationException();
-            } else if (antlrNode.assignmentExpression().conditionalExpression() != null){
-                if (antlrNode.assignmentExpression().conditionalExpression().conditionalExpression() != null){
+            } else if (antlrNode.assignmentExpression().conditionalExpression() != null) {
+                if (antlrNode.assignmentExpression().conditionalExpression().conditionalExpression() != null) {
                     throw new UnsupportedOperationException();
-                } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression() != null){
+                } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression() != null) {
                     if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression() != null) {
-                        if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().conditionalAndExpression() != null){
+                        if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().conditionalAndExpression() != null) {
                             throw new UnsupportedOperationException();
-                        } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression() != null){
-                            if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression() != null){
+                        } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression() != null) {
+                            if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression() != null) {
                                 if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression() != null) {
                                     return fromAntlrNode(antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression());
-                                } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().exclusiveOrExpression() != null){
+                                } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().exclusiveOrExpression() != null) {
                                     throw new UnsupportedOperationException();
                                 } else {
-                                    throw new UnsupportedOperationException();    
+                                    throw new UnsupportedOperationException();
                                 }
-                            } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().inclusiveOrExpression() != null){
+                            } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression().inclusiveOrExpression() != null) {
                                 throw new UnsupportedOperationException();
                             } else {
                                 throw new UnsupportedOperationException();
@@ -109,7 +115,7 @@ public abstract class Expression extends Node {
                         } else {
                             throw new UnsupportedOperationException();
                         }
-                    } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalOrExpression() != null){
+                    } else if (antlrNode.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalOrExpression() != null) {
                         throw new UnsupportedOperationException();
                     } else {
                         throw new UnsupportedOperationException();
