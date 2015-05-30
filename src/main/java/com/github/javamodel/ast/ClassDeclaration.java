@@ -11,15 +11,15 @@ import java.util.List;
  * Created by ftomassetti on 27/05/15.
  */
 public class ClassDeclaration extends TypeDeclaration {
-    private final MultipleRelation<ClassDeclaration, AnnotationUsage> annotations = new MultipleRelation<>(this);
+    private final MultipleRelation<ClassDeclaration, AnnotationUsage> annotations = new MultipleRelation<>("annotations", this);
     private List<Modifier> modifiers = new ArrayList<>();
     private String name;
-    private final MultipleRelation<ClassDeclaration, TypeParameter> typeParameters = new MultipleRelation<>(this);
-    private final SingleRelation<ClassDeclaration, TypeRef> superclass = new SingleRelation<>(this);
-    private final MultipleRelation<ClassDeclaration, TypeRef> interfaces = new MultipleRelation<>(this);
-    private final MultipleRelation<ClassDeclaration, FieldDeclaration> fields = new MultipleRelation<>(this);
-    private final MultipleRelation<ClassDeclaration, MethodDeclaration> methods = new MultipleRelation<>(this);
-    private final MultipleRelation<ClassDeclaration, TypeDeclaration> internalTypes = new MultipleRelation<>(this);
+    private final MultipleRelation<ClassDeclaration, TypeParameter> typeParameters = new MultipleRelation<>("typeParameters", this);
+    private final SingleRelation<ClassDeclaration, TypeRef> superclass = new SingleRelation<>("superclass", this);
+    private final MultipleRelation<ClassDeclaration, TypeRef> interfaces = new MultipleRelation<>("interfaces", this);
+    private final MultipleRelation<ClassDeclaration, FieldDeclaration> fields = new MultipleRelation<>("fields", this);
+    private final MultipleRelation<ClassDeclaration, MethodDeclaration> methods = new MultipleRelation<>("methods", this);
+    private final MultipleRelation<ClassDeclaration, TypeDeclaration> internalTypes = new MultipleRelation<>("internalTypes", this);
 
     @Override
     public String toString() {

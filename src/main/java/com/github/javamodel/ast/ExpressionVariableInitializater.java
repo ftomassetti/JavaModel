@@ -8,7 +8,7 @@ import com.github.javamodel.ast.expressions.Expression;
  */
 public class ExpressionVariableInitializater extends VariableInitializer {
     
-    private final SingleRelation<ExpressionVariableInitializater, Expression> expression = new SingleRelation<ExpressionVariableInitializater, Expression>(this);
+    private final SingleRelation<ExpressionVariableInitializater, Expression> expression = new SingleRelation<ExpressionVariableInitializater, Expression>("expression", this);
 
     public static ExpressionVariableInitializater fromAntlrNode(Java8Parser.ExpressionContext antlrNode){
         ExpressionVariableInitializater instance = new ExpressionVariableInitializater();

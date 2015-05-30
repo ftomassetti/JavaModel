@@ -17,9 +17,9 @@ public class FieldDeclaration extends Node {
     }
 
     private List<Modifier> modifiers = new ArrayList<>();
-    private final MultipleRelation<FieldDeclaration, AnnotationUsage> annotations = new MultipleRelation<>(this);
-    private final SingleRelation<FieldDeclaration, TypeRef> type = new SingleRelation<>(this);
-    private final MultipleRelation<FieldDeclaration, VariableDeclaration> variableDeclarations = new MultipleRelation<>(this);
+    private final MultipleRelation<FieldDeclaration, AnnotationUsage> annotations = new MultipleRelation<>("annotations", this);
+    private final SingleRelation<FieldDeclaration, TypeRef> type = new SingleRelation<>("type", this);
+    private final MultipleRelation<FieldDeclaration, VariableDeclaration> variableDeclarations = new MultipleRelation<>("variableDeclarations", this);
 
     public static FieldDeclaration fromAntlrNode(Java8Parser.FieldDeclarationContext antlrNode){
         FieldDeclaration instance = new FieldDeclaration();

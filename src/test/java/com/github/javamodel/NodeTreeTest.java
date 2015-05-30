@@ -17,95 +17,95 @@ public class NodeTreeTest {
     
     @Test
     public void testFieldDeclarations(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    FieldDeclaration{}\n" +
-                "      PrimitiveTypeRef{INT}\n" +
-                "      VariableDeclaration{name='a'}\n" +
-                "      VariableDeclaration{name='b'}\n" +
-                "      VariableDeclaration{name='c'}\n" +
-                "    ClassDeclaration{modifiers=[], name='B'}\n" +
-                "      ClassDeclaration{modifiers=[], name='C'}", toTree("class A { int a,b,c; class B { class C {} } }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    fields: FieldDeclaration{}\n" +
+                "      type: PrimitiveTypeRef{INT}\n" +
+                "      variableDeclarations: VariableDeclaration{name='a'}\n" +
+                "      variableDeclarations: VariableDeclaration{name='b'}\n" +
+                "      variableDeclarations: VariableDeclaration{name='c'}\n" +
+                "    internalTypes: ClassDeclaration{modifiers=[], name='B'}\n" +
+                "      internalTypes: ClassDeclaration{modifiers=[], name='C'}", toTree("class A { int a,b,c; class B { class C {} } }"));
         
     }
 
     @Test
     public void testInternalClasses(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    ClassDeclaration{modifiers=[], name='B'}\n" +
-                "      ClassDeclaration{modifiers=[], name='C'}", toTree("class A { class B { class C {} }}"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    internalTypes: ClassDeclaration{modifiers=[], name='B'}\n" +
+                "      internalTypes: ClassDeclaration{modifiers=[], name='C'}", toTree("class A { class B { class C {} }}"));
 
     }
 
     @Test
     public void testAddition(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    FieldDeclaration{}\n" +
-                "      PrimitiveTypeRef{INT}\n" +
-                "      VariableDeclaration{name='a'}\n" +
-                "        ExpressionVariableInitializater{}\n" +
-                "          BinaryExpression{operator=PLUS}\n" +
-                "            IntegerLiteralExpression{text='1'}\n" +
-                "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 + 10; }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    fields: FieldDeclaration{}\n" +
+                "      type: PrimitiveTypeRef{INT}\n" +
+                "      variableDeclarations: VariableDeclaration{name='a'}\n" +
+                "        initializer: ExpressionVariableInitializater{}\n" +
+                "          expression: BinaryExpression{operator=PLUS}\n" +
+                "            leftOperand: IntegerLiteralExpression{text='1'}\n" +
+                "            rightOperand: IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 + 10; }"));
 
     }
 
     @Test
     public void testMultiplication(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    FieldDeclaration{}\n" +
-                "      PrimitiveTypeRef{INT}\n" +
-                "      VariableDeclaration{name='a'}\n" +
-                "        ExpressionVariableInitializater{}\n" +
-                "          BinaryExpression{operator=MULT}\n" +
-                "            IntegerLiteralExpression{text='1'}\n" +
-                "            IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 * 10; }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    fields: FieldDeclaration{}\n" +
+                "      type: PrimitiveTypeRef{INT}\n" +
+                "      variableDeclarations: VariableDeclaration{name='a'}\n" +
+                "        initializer: ExpressionVariableInitializater{}\n" +
+                "          expression: BinaryExpression{operator=MULT}\n" +
+                "            leftOperand: IntegerLiteralExpression{text='1'}\n" +
+                "            rightOperand: IntegerLiteralExpression{text='10'}", toTree("class A { int a = 1 * 10; }"));
 
     }
 
     @Test
     public void testNameReference(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    FieldDeclaration{}\n" +
-                "      PrimitiveTypeRef{INT}\n" +
-                "      VariableDeclaration{name='a'}\n" +
-                "        ExpressionVariableInitializater{}\n" +
-                "          NameReferenceExpression{name='b'}", toTree("class A { int a = b; }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    fields: FieldDeclaration{}\n" +
+                "      type: PrimitiveTypeRef{INT}\n" +
+                "      variableDeclarations: VariableDeclaration{name='a'}\n" +
+                "        initializer: ExpressionVariableInitializater{}\n" +
+                "          expression: NameReferenceExpression{name='b'}", toTree("class A { int a = b; }"));
 
     }
 
     @Test
     public void testSimplestClassMethod(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    MethodDeclaration{name='foo', modifiers=[]}\n" +
-                "      VoidTypeRef{}\n" +
-                "      BlockStatement{}", toTree("class A { void foo(){} }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    methods: MethodDeclaration{name='foo', modifiers=[]}\n" +
+                "      returnType: VoidTypeRef{}\n" +
+                "      block: BlockStatement{}", toTree("class A { void foo(){} }"));
 
     }
 
     @Test
     public void testPrimitiveArray(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[], name='A'}\n" +
-                "    FieldDeclaration{}\n" +
-                "      ArrayTypeRef{}\n" +
-                "        ArrayTypeRef{}\n" +
-                "          ArrayTypeRef{}\n" +
-                "            PrimitiveTypeRef{INT}\n" +
-                "      VariableDeclaration{name='i'}", toTree("class A { int[][][] i; }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    fields: FieldDeclaration{}\n" +
+                "      type: ArrayTypeRef{}\n" +
+                "        baseType: ArrayTypeRef{}\n" +
+                "          baseType: ArrayTypeRef{}\n" +
+                "            baseType: PrimitiveTypeRef{INT}\n" +
+                "      variableDeclarations: VariableDeclaration{name='i'}", toTree("class A { int[][][] i; }"));
 
     }
 
     @Test
     public void testClassExtension(){
-        assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{modifiers=[PUBLIC], name='BinaryExpression'}\n" +
-                "    DeclaredTypeRef{name='Expression'}", toTree("public class BinaryExpression extends Expression { }"));
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[PUBLIC], name='BinaryExpression'}\n" +
+                "    superclass: DeclaredTypeRef{name='Expression'}", toTree("public class BinaryExpression extends Expression { }"));
 
     }
 }

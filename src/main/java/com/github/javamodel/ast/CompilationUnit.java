@@ -5,15 +5,15 @@ import com.github.javamodel.Node;
 
 public class CompilationUnit extends Node {
     
-    private SingleRelation<CompilationUnit, PackageDeclaration> packageDeclaration = new SingleRelation<>(this);
+    private SingleRelation<CompilationUnit, PackageDeclaration> packageDeclaration = new SingleRelation<>("packageDeclaration", this);
 
     @Override
     public String toString() {
         return "CompilationUnit{}";
     }
 
-    private MultipleRelation<CompilationUnit, ImportDeclaration> imports = new MultipleRelation<>(this);
-    private MultipleRelation<CompilationUnit, TypeDeclaration> topTypes = new MultipleRelation<>(this);
+    private MultipleRelation<CompilationUnit, ImportDeclaration> imports = new MultipleRelation<>("imports", this);
+    private MultipleRelation<CompilationUnit, TypeDeclaration> topTypes = new MultipleRelation<>("topTypes",this);
     
     public static CompilationUnit fromAntlrNode(Java8Parser.CompilationUnitContext antlrNode){
         CompilationUnit instance = new CompilationUnit();

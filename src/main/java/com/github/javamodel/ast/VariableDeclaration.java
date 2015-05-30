@@ -9,7 +9,7 @@ import com.github.javamodel.Node;
 public class VariableDeclaration extends Node {
     
     private String name;
-    private final SingleRelation<VariableDeclaration, VariableInitializer> initializer = new SingleRelation<VariableDeclaration, VariableInitializer>(this);
+    private final SingleRelation<VariableDeclaration, VariableInitializer> initializer = new SingleRelation<VariableDeclaration, VariableInitializer>("initializer", this);
 
     @Override
     public String toString() {

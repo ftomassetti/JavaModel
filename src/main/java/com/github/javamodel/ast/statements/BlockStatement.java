@@ -8,7 +8,7 @@ import com.github.javamodel.ast.MultipleRelation;
  * Created by federico on 29/05/15.
  */
 public class BlockStatement extends Statement {
-    private MultipleRelation<BlockStatement, Statement> statements = new MultipleRelation<>(this);
+    private MultipleRelation<BlockStatement, Statement> statements = new MultipleRelation<>("statements", this);
 
     @Override
     public String toString() {

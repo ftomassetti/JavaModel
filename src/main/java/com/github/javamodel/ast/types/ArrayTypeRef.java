@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
  */
 public class ArrayTypeRef extends TypeRef {
 
-    private SingleRelation<ArrayTypeRef, TypeRef> baseType = new SingleRelation<>(this);
+    private SingleRelation<ArrayTypeRef, TypeRef> baseType = new SingleRelation<>("baseType", this);
 
     private static TypeRef fromAntlrNode(TypeRef baseType, long nDims) {
         ArrayTypeRef instance = new ArrayTypeRef();

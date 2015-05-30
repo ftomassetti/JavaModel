@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class PackageDeclaration extends Node {
 
-    private final MultipleRelation<PackageDeclaration, AnnotationUsage> annotations = new MultipleRelation<>(this);
+    private final MultipleRelation<PackageDeclaration, AnnotationUsage> annotations = new MultipleRelation<>("annotations", this);
     private List<String> identifiers = new ArrayList<>();
 
     public static PackageDeclaration fromAntlrNode(Java8Parser.PackageDeclarationContext antlrNode) {

@@ -9,7 +9,7 @@ import com.github.javamodel.ast.MultipleRelation;
 public class DeclaredTypeRef extends TypeRef {
 
     private String name;
-    private MultipleRelation<DeclaredTypeRef, TypeRef> typeArguments = new MultipleRelation<>(this);
+    private MultipleRelation<DeclaredTypeRef, TypeRef> typeArguments = new MultipleRelation<>("typeArguments", this);
 
     @Override
     public String toString() {
@@ -48,10 +48,30 @@ public class DeclaredTypeRef extends TypeRef {
     }
 
     public static TypeRef fromAntlrNode(Java8Parser.ClassOrInterfaceTypeContext antlrNode) {
-        if (antlrNode.classType_lf_classOrInterfaceType() != null) {
-            throw new UnsupportedOperationException();
+        if (antlrNode.classType_lf_classOrInterfaceType() != null && antlrNode.classType_lf_classOrInterfaceType().size() > 0) {
+            if (antlrNode.classType_lf_classOrInterfaceType().size() == 1) {
+                throw new UnsupportedOperationException();
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        } else if (antlrNode.classType_lfno_classOrInterfaceType() != null) {
+            return DeclaredTypeRef.fromAntlrNode(antlrNode.classType_lfno_classOrInterfaceType());
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    private static TypeRef fromAntlrNode(Java8Parser.ClassType_lfno_classOrInterfaceTypeContext antlrNode) {
+        DeclaredTypeRef instance = new DeclaredTypeRef();
+        if (antlrNode.annotation() != null){
+            if (antlrNode.annotation().size() >0){
+                throw new UnsupportedOperationException();
+            }
+        }
+        if (antlrNode.typeArguments() != null){
+            throw new UnsupportedOperationException();
+        }
+        instance.name = antlrNode.Identifier().getText();
+        return instance;
     }
 }

@@ -12,24 +12,32 @@ import java.util.List;
 public class Node {
     private Node parent;
     private List<Node> children = new ArrayList<>();
+
+    public Relation getContainer() {
+        return container;
+    }
+
+    // Relation in which this node is the child
+    private Relation container;
+    // Relations in which this node is the parent
+    private List<Relation> containments = new LinkedList<>();
     
-    public void setParent(Node parent){
-        if (this.parent != null){
-            this.parent.removeChild(this);
+    public void setContainer(Relation container){
+        if (this.container != null){
+            this.container.removeChild(this);
         }
-        parent.addChild(this);
-        this.parent = parent;
-    }
-    
-    private void addChild(Node child){
-        children.add(child);
-    }
-    
-    private void removeChild(Node child){
-        children.remove(child);
+        this.container = container;
     }
 
     public List<Node> getChildren() {
+        List<Node> children = new ArrayList<>();
+        for (Relation r : containments){
+            children.addAll(r.getChildren());
+        }
         return children;
+    }
+
+    public void addRelations(Relation relation) {
+        containments.add(relation);
     }
 }

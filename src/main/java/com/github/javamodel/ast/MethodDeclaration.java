@@ -23,9 +23,9 @@ public class MethodDeclaration extends Node {
 
     private List<Modifier> modifiers = new ArrayList<>();
     private String name;
-    private final MultipleRelation<MethodDeclaration, AnnotationUsage> annotations = new MultipleRelation<>(this);
-    private final SingleRelation<MethodDeclaration, TypeRef> returnType = new SingleRelation<>(this);
-    private final SingleRelation<MethodDeclaration, BlockStatement> block = new SingleRelation<MethodDeclaration, BlockStatement>(this);
+    private final MultipleRelation<MethodDeclaration, AnnotationUsage> annotations = new MultipleRelation<>("annotations", this);
+    private final SingleRelation<MethodDeclaration, TypeRef> returnType = new SingleRelation<>("returnType", this);
+    private final SingleRelation<MethodDeclaration, BlockStatement> block = new SingleRelation<MethodDeclaration, BlockStatement>("block", this);
 
     public static MethodDeclaration fromAntlrNode(Java8Parser.MethodDeclarationContext antlrNode){
         MethodDeclaration instance = new MethodDeclaration();

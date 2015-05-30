@@ -33,6 +33,11 @@ public class ParserCli {
     public static void printTree(Node node, int indentation, StringBuffer stringBuffer) {
         if (node == null) return;
         for (int j = 0; j < indentation; j++) stringBuffer.append("  ");
+        if (node.getContainer() != null){
+            stringBuffer.append(node.getContainer().getName() +": ");
+        } else {
+            stringBuffer.append("<ROOT> ");
+        }
         stringBuffer.append(node);
         stringBuffer.append("\n");
         for (Node child : node.getChildren()) {

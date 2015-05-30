@@ -32,8 +32,8 @@ public class BinaryExpression extends Expression {
     }
 
     private Operator operator;
-    private SingleRelation<BinaryExpression, Expression> leftOperand = new SingleRelation<BinaryExpression, Expression>(this);
-    private SingleRelation<BinaryExpression, Expression> rightOperand = new SingleRelation<BinaryExpression, Expression>(this);
+    private SingleRelation<BinaryExpression, Expression> leftOperand = new SingleRelation<BinaryExpression, Expression>("leftOperand", this);
+    private SingleRelation<BinaryExpression, Expression> rightOperand = new SingleRelation<BinaryExpression, Expression>("rightOperand", this);
 
     @Override
     public String toString() {
