@@ -39,4 +39,15 @@ public abstract class TypeRef extends Node {
         }
     }
 
+    public static TypeRef fromAntlrNode(Java8Parser.ReferenceTypeContext referenceTypeContext) {
+        if (referenceTypeContext.classOrInterfaceType() != null){
+            return DeclaredTypeRef.fromAntlrNode(referenceTypeContext.classOrInterfaceType());
+        } else if (referenceTypeContext.arrayType() != null){
+            return ArrayTypeRef.fromAntlrNode(referenceTypeContext.arrayType());
+        } else if (referenceTypeContext.typeVariable() != null){
+            throw new UnsupportedOperationException();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
 }

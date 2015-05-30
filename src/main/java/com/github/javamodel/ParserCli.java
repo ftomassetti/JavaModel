@@ -47,7 +47,7 @@ public class ParserCli {
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
-        String code = "public class BinaryExpression extends Expression { }";
+        String code = "public class BinaryExpression implements Iterable<Object> { }";
         Node root = new ParserCli().parse(code);
         StringBuffer stringBuffer = new StringBuffer();
         printTree(root, 0, stringBuffer);

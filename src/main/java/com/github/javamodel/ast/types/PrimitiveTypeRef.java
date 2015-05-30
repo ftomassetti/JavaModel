@@ -7,6 +7,12 @@ import com.github.javamodel.Java8Parser;
  */
 public class PrimitiveTypeRef extends TypeRef {
 
+    public static TypeRef fromAntlrNode(Java8Parser.PrimitiveTypeContext antlrNode) {
+        PrimitiveTypeRef instance = new PrimitiveTypeRef();
+        instance.primitiveType = PrimitiveType.valueOf(antlrNode.getText().toUpperCase());
+        return instance;
+    }
+
     public static enum PrimitiveType {
         BOOLEAN,
         INT,

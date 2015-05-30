@@ -45,4 +45,22 @@ public class ArrayTypeRef extends TypeRef {
     public String toString() {
         return "ArrayTypeRef{}";
     }
+
+    public static TypeRef fromAntlrNode(Java8Parser.ArrayTypeContext antlrNode) {
+        if (antlrNode.primitiveType() != null){
+
+            long nDims = antlrNode.dims().children.stream().filter((c)->c instanceof TerminalNodeImpl).map((c) -> (TerminalNodeImpl)c)
+                    .filter((c)->c.getText().equals("[")).count();
+
+            // TODO consider annotations
+            // TODO consider multiple dimensions
+            if (antlrNode.dims().annotation() != null && !antlrNode.dims().annotation().isEmpty()){
+                throw new UnsupportedOperationException();
+            }
+
+            return fromAntlrNode(PrimitiveTypeRef.fromAntlrNode(antlrNode.primitiveType()), nDims);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
 }
