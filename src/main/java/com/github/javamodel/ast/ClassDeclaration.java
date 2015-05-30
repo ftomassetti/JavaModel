@@ -1,6 +1,7 @@
 package com.github.javamodel.ast;
 
 import com.github.javamodel.Java8Parser;
+import com.github.javamodel.ast.types.DeclaredTypeRef;
 import com.github.javamodel.ast.types.TypeRef;
 
 import java.util.ArrayList;
@@ -23,7 +24,8 @@ public class ClassDeclaration extends TypeDeclaration {
     @Override
     public String toString() {
         return "ClassDeclaration{" +
-                "name='" + name + '\'' +
+                "modifiers=" + modifiers +
+                ", name='" + name + '\'' +
                 '}';
     }
 
@@ -41,10 +43,10 @@ public class ClassDeclaration extends TypeDeclaration {
             antlrNode.typeParameters().typeParameterList().typeParameter().forEach((an) -> instance.typeParameters.add(TypeParameter.fromAntlrNode(an)));
         }
         if (antlrNode.superclass() != null) {
-            instance.superclass.set(TypeRef.fromAntlrNode(antlrNode.superclass().classType()));
+            instance.superclass.set(DeclaredTypeRef.fromAntlrNode(antlrNode.superclass().classType()));
         }
         if (antlrNode.superinterfaces() != null) {
-            antlrNode.superinterfaces().interfaceTypeList().interfaceType().forEach((an) -> instance.interfaces.add(TypeRef.fromAntlrNode(an.classType())));
+            antlrNode.superinterfaces().interfaceTypeList().interfaceType().forEach((an) -> instance.interfaces.add(DeclaredTypeRef.fromAntlrNode(an.classType())));
         }
         
         

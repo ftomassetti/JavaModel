@@ -47,7 +47,7 @@ public class ParserCli {
     }
 
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
-        String code = "class A { int[][][] i; }";
+        String code = "public class BinaryExpression extends Expression { }";
         Node root = new ParserCli().parse(code);
         StringBuffer stringBuffer = new StringBuffer();
         printTree(root, 0, stringBuffer);

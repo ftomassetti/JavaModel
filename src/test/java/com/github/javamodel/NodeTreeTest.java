@@ -18,30 +18,30 @@ public class NodeTreeTest {
     @Test
     public void testFieldDeclarations(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    FieldDeclaration{}\n" +
                 "      PrimitiveTypeRef{INT}\n" +
                 "      VariableDeclaration{name='a'}\n" +
                 "      VariableDeclaration{name='b'}\n" +
                 "      VariableDeclaration{name='c'}\n" +
-                "    ClassDeclaration{name='B'}\n" +
-                "      ClassDeclaration{name='C'}", toTree("class A { int a,b,c; class B { class C {} } }"));
+                "    ClassDeclaration{modifiers=[], name='B'}\n" +
+                "      ClassDeclaration{modifiers=[], name='C'}", toTree("class A { int a,b,c; class B { class C {} } }"));
         
     }
 
     @Test
     public void testInternalClasses(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
-                "    ClassDeclaration{name='B'}\n" +
-                "      ClassDeclaration{name='C'}", toTree("class A { class B { class C {} }}"));
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
+                "    ClassDeclaration{modifiers=[], name='B'}\n" +
+                "      ClassDeclaration{modifiers=[], name='C'}", toTree("class A { class B { class C {} }}"));
 
     }
 
     @Test
     public void testAddition(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    FieldDeclaration{}\n" +
                 "      PrimitiveTypeRef{INT}\n" +
                 "      VariableDeclaration{name='a'}\n" +
@@ -55,7 +55,7 @@ public class NodeTreeTest {
     @Test
     public void testMultiplication(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    FieldDeclaration{}\n" +
                 "      PrimitiveTypeRef{INT}\n" +
                 "      VariableDeclaration{name='a'}\n" +
@@ -69,7 +69,7 @@ public class NodeTreeTest {
     @Test
     public void testNameReference(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    FieldDeclaration{}\n" +
                 "      PrimitiveTypeRef{INT}\n" +
                 "      VariableDeclaration{name='a'}\n" +
@@ -81,7 +81,7 @@ public class NodeTreeTest {
     @Test
     public void testSimplestClassMethod(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    MethodDeclaration{name='foo', modifiers=[]}\n" +
                 "      VoidTypeRef{}\n" +
                 "      BlockStatement{}", toTree("class A { void foo(){} }"));
@@ -91,13 +91,21 @@ public class NodeTreeTest {
     @Test
     public void testPrimitiveArray(){
         assertEquals("CompilationUnit{}\n" +
-                "  ClassDeclaration{name='A'}\n" +
+                "  ClassDeclaration{modifiers=[], name='A'}\n" +
                 "    FieldDeclaration{}\n" +
                 "      ArrayTypeRef{}\n" +
                 "        ArrayTypeRef{}\n" +
                 "          ArrayTypeRef{}\n" +
                 "            PrimitiveTypeRef{INT}\n" +
                 "      VariableDeclaration{name='i'}", toTree("class A { int[][][] i; }"));
+
+    }
+
+    @Test
+    public void testClassExtension(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{modifiers=[PUBLIC], name='BinaryExpression'}\n" +
+                "    DeclaredTypeRef{name='Expression'}", toTree("public class BinaryExpression extends Expression { }"));
 
     }
 }
