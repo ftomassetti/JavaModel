@@ -108,6 +108,7 @@ public class NodeTreeTest {
                 "    superclass: DeclaredTypeRef{name='Expression'}", toTree("public class BinaryExpression extends Expression { }"));
 
     }
+
     @Test
     public void testClassImplementation(){
         assertEquals("<ROOT> CompilationUnit{}\n" +
@@ -116,5 +117,15 @@ public class NodeTreeTest {
                 "      typeArguments: DeclaredTypeRef{name='Object'}", toTree("public class BinaryExpression implements Iterable<Object> { }"));
 
     }
+
+    @Test
+    public void testTypeBounds(){
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[], name='BinaryExpression'}\n" +
+                "    typeParameters: TypeParameter{name='P'}\n" +
+                "      bounds: TypeBound{name='Node'}", toTree("class BinaryExpression<P extends Node> { }"));
+
+    }
+
 
 }

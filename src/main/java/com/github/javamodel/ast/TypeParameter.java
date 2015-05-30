@@ -8,8 +8,34 @@ import com.github.javamodel.Node;
  */
 public class TypeParameter extends Node {
 
+    private String name;
+    private MultipleRelation<TypeParameter, TypeBound> bounds = new MultipleRelation<>("bounds", this);
+
+    @Override
+    public String toString() {
+        return "TypeParameter{" +
+                "name='" + name + '\'' +
+                '}';
+    }
+
     public static TypeParameter fromAntlrNode(Java8Parser.TypeParameterContext antlrNode){
         TypeParameter instance = new TypeParameter();
-        throw new UnsupportedOperationException();
+        if (antlrNode.typeBound() != null){
+            if (antlrNode.typeBound().additionalBound() != null && antlrNode.typeBound().additionalBound().size() > 0){
+                throw new UnsupportedOperationException();
+            }
+            if (antlrNode.typeBound().typeVariable() != null){
+                instance.bounds.add(TypeBound.fromAntlrNode(antlrNode.typeBound().typeVariable()));
+            } else if (antlrNode.typeBound().classOrInterfaceType() != null){
+                throw new UnsupportedOperationException();
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+        if (antlrNode.typeParameterModifier()!=null && antlrNode.typeParameterModifier().size()>0){
+            throw new UnsupportedOperationException();
+        }
+        instance.name = antlrNode.Identifier().getText();
+        return instance;
     }
 }
