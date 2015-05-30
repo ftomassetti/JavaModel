@@ -87,4 +87,17 @@ public class NodeTreeTest {
                 "      BlockStatement{}", toTree("class A { void foo(){} }"));
 
     }
+
+    @Test
+    public void testPrimitiveArray(){
+        assertEquals("CompilationUnit{}\n" +
+                "  ClassDeclaration{name='A'}\n" +
+                "    FieldDeclaration{}\n" +
+                "      ArrayTypeRef{}\n" +
+                "        ArrayTypeRef{}\n" +
+                "          ArrayTypeRef{}\n" +
+                "            PrimitiveTypeRef{INT}\n" +
+                "      VariableDeclaration{name='i'}", toTree("class A { int[][][] i; }"));
+
+    }
 }
