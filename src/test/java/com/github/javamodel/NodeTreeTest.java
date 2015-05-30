@@ -108,4 +108,13 @@ public class NodeTreeTest {
                 "    superclass: DeclaredTypeRef{name='Expression'}", toTree("public class BinaryExpression extends Expression { }"));
 
     }
+    @Test
+    public void testClassImplementation(){
+        assertEquals("<ROOT> CompilationUnit{}\n" +
+                "  topTypes: ClassDeclaration{modifiers=[PUBLIC], name='BinaryExpression'}\n" +
+                "    interfaces: DeclaredTypeRef{name='Iterable'}\n" +
+                "      typeArguments: DeclaredTypeRef{name='Object'}", toTree("public class BinaryExpression implements Iterable<Object> { }"));
+
+    }
+
 }
