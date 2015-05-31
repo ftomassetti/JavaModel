@@ -3,9 +3,7 @@ package com.github.javamodel;
 import com.github.javamodel.ast.CompilationUnit;
 import org.antlr.v4.runtime.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class ParserCli {
@@ -51,11 +49,42 @@ public class ParserCli {
         return sb.toString();
     }
 
+    private static void explore(File dir) throws IOException {
+        for (File child : dir.listFiles()){
+            if (child.isDirectory()) {
+                explore(child);
+            } else if (child.isFile() && child.getName().endsWith(".java")){
+                System.out.println("Explore "+child);
+                String code = readFile(child);
+                Node root = new ParserCli().parse(code);
+                StringBuffer stringBuffer = new StringBuffer();
+                printTree(root, 0, stringBuffer);
+                System.out.println(stringBuffer.toString());
+                explore(new File("src"));
+            }
+        }
+    }
+
+    private static String readFile( File file ) throws IOException {
+        BufferedReader reader = new BufferedReader( new FileReader (file));
+        String         line = null;
+        StringBuilder  stringBuilder = new StringBuilder();
+        String         ls = System.getProperty("line.separator");
+
+        while( ( line = reader.readLine() ) != null ) {
+            stringBuilder.append( line );
+            stringBuilder.append( ls );
+        }
+
+        return stringBuilder.toString();
+    }
+
     public static void main( String[] args ) throws IOException, NoSuchMethodException {
         String code = "class BinaryExpression<P extends Node> { }";
         Node root = new ParserCli().parse(code);
         StringBuffer stringBuffer = new StringBuffer();
         printTree(root, 0, stringBuffer);
         System.out.println(stringBuffer.toString());
+        explore(new File("src"));
     }
 }

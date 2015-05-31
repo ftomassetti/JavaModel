@@ -24,6 +24,7 @@ public class MethodDeclaration extends Node {
     private List<Modifier> modifiers = new ArrayList<>();
     private String name;
     private final MultipleRelation<MethodDeclaration, AnnotationUsage> annotations = new MultipleRelation<>("annotations", this);
+    private final MultipleRelation<MethodDeclaration, FormalParameter> formalParameters = new MultipleRelation<>("formalParameters", this);
     private final SingleRelation<MethodDeclaration, TypeRef> returnType = new SingleRelation<>("returnType", this);
     private final SingleRelation<MethodDeclaration, BlockStatement> block = new SingleRelation<MethodDeclaration, BlockStatement>("block", this);
 
@@ -54,7 +55,8 @@ public class MethodDeclaration extends Node {
             throw new UnsupportedOperationException();
         }
         if (antlrNode.methodHeader().methodDeclarator().formalParameterList() != null){
-            throw new UnsupportedOperationException();
+            antlrNode.methodHeader().methodDeclarator().formalParameterList().formalParameters().formalParameter().forEach((an)->
+                    instance.formalParameters.add(FormalParameter.fromAntlrNode(an)));
         }
         if (antlrNode.methodBody() != null){
             instance.block.set(BlockStatement.fromAntlrNode(antlrNode.methodBody().block()));
