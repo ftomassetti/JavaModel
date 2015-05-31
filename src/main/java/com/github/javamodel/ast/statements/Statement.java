@@ -52,9 +52,9 @@ public abstract class Statement extends Node {
         } else if (antlrNode.emptyStatement() != null){
             throw new UnsupportedOperationException();
         } else if (antlrNode.expressionStatement() != null){
-            throw new UnsupportedOperationException();
+            return ExpressionStatement.fromAntlrNode(antlrNode.expressionStatement());
         } else if (antlrNode.returnStatement() != null) {
-            throw new UnsupportedOperationException();
+            return ReturnStatement.fromAntlrNode(antlrNode.returnStatement());
         } else if (antlrNode.switchStatement() != null){
             throw new UnsupportedOperationException();
         } else if (antlrNode.synchronizedStatement() != null){

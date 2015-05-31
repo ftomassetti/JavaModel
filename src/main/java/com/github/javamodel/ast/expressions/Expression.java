@@ -50,7 +50,7 @@ public abstract class Expression extends Node {
                         } else if (unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().fieldAccess_lfno_primary() != null) {
                             throw new UnsupportedOperationException();
                         } else {
-                            throw new UnsupportedOperationException();
+                            throw new UnsupportedOperationException(unary.postfixExpression().primary().primaryNoNewArray_lfno_primary().getText());
                         }
                     } else {
                         throw new UnsupportedOperationException();
