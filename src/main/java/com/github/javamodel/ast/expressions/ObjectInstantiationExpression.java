@@ -17,7 +17,7 @@ public class ObjectInstantiationExpression extends Expression {
         if (antlrNode.typeArguments() != null){
             throw new UnsupportedOperationException();
         }
-        if (antlrNode.annotation() != null){
+        if (antlrNode.annotation() != null && !antlrNode.annotation().isEmpty()){
             throw new UnsupportedOperationException();
         }
         // TODO consider the whole expression

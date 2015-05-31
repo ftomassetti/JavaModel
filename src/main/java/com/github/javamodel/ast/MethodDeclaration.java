@@ -55,8 +55,10 @@ public class MethodDeclaration extends Node {
             throw new UnsupportedOperationException();
         }
         if (antlrNode.methodHeader().methodDeclarator().formalParameterList() != null){
-            antlrNode.methodHeader().methodDeclarator().formalParameterList().formalParameters().formalParameter().forEach((an)->
-                    instance.formalParameters.add(FormalParameter.fromAntlrNode(an)));
+            if (antlrNode.methodHeader().methodDeclarator().formalParameterList().formalParameters() != null) {
+                antlrNode.methodHeader().methodDeclarator().formalParameterList().formalParameters().formalParameter().forEach((an) ->
+                        instance.formalParameters.add(FormalParameter.fromAntlrNode(an)));
+            }
         }
         if (antlrNode.methodBody() != null){
             instance.block.set(BlockStatement.fromAntlrNode(antlrNode.methodBody().block()));

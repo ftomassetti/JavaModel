@@ -29,4 +29,8 @@ public enum Modifier {
     public static Modifier fromAntlrNode(Java8Parser.MethodModifierContext antlrNode) {
         return Modifier.valueOf(antlrNode.getText().toUpperCase());
     }
+
+    public static Modifier fromAntlrNode(Java8Parser.VariableModifierContext antlrNode) {
+        return Modifier.valueOf(antlrNode.getText().toUpperCase());
+    }
 }
